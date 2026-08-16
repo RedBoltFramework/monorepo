@@ -1,0 +1,72 @@
+{
+  "folders": [
+    {
+      "name": "RedBolt",
+      "path": "../RedBolt"
+    },
+    {
+      "name": "RedBolt.2D",
+      "path": "../RedBolt.2D"
+    },
+    {
+      "name": "RedBolt.Actions",
+      "path": "../RedBolt.Actions"
+    },
+    {
+      "name": "RedBolt.CSG",
+      "path": "../RedBolt.CSG"
+    },
+    {
+      "name": "RedBolt.Glow",
+      "path": "../RedBolt.Glow"
+    },
+    {
+      "name": "RedBolt.IK",
+      "path": "../RedBolt.IK"
+    },
+    {
+      "name": "RedBolt.Navigation",
+      "path": "../RedBolt.Navigation"
+    },
+    {
+      "name": "RedBolt.Network",
+      "path": "../RedBolt.Network"
+    },
+    {
+      "name": "RedBolt.Particles",
+      "path": "../RedBolt.Particles"
+    },
+    {
+      "name": "RedBolt.PhysicsBox2D",
+      "path": "../RedBolt.PhysicsBox2D"
+    },
+    {
+      "name": "RedBolt.PhysicsJolt",
+      "path": "../RedBolt.PhysicsJolt"
+    },
+    {
+      "name": "RedBolt.Tests",
+      "path": "../RedBolt.Tests"
+    },
+    {
+      "name": "RedBolt.RmlUI",
+      "path": "../RedBolt.RmlUI"
+    },
+    {
+      "name": "RedBolt.XR",
+      "path": "../RedBolt.XR"
+    },
+    {
+      "name": "RedBoltFramework.github.io",
+      "path": "../RedBoltFramework.github.io"
+    },
+    {
+      "name": "SharpCpp",
+      "path": "../extern/SharpCpp"
+    },
+    {
+      "name": "imgui",
+      "path": "../extern/imgui"
+    }
+  ]
+}
