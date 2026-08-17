@@ -6,7 +6,9 @@ exec dotnet run --file "$0" -- "$@"
 using System.Diagnostics;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
 
 return await MonorepoApp.RunAsync(args);
@@ -51,6 +53,15 @@ static class MonorepoApp
         new("RedBolt.PhysicsJolt", "physics-jolt", "Simulation", "Jolt-powered 3D physics, character controllers, vehicles, raycasts, and network integration."),
         new("RedBolt.RmlUI", "rmlui", "Rendering", "RmlUi integration for rich HTML- and CSS-inspired game interfaces and editor extensions."),
         new("RedBolt.XR", "xr", "Systems", "OpenXR integration with native bindings, managed VR systems, action manifests, and cross-platform XR support."),
+    ];
+
+    private static readonly WebBundle[] WebBundles =
+    [
+        new("standard", "WebSamples/RedBolt.WebSamples.csproj",
+            ["RedBolt", "RedBolt.2D", "RedBolt.Actions", "RedBolt.CSG", "RedBolt.IK", "RedBolt.Navigation", "RedBolt.Network", "RedBolt.Particles"]),
+        new("physics-box2d", "WebSamples/RedBolt.WebSamples.csproj", ["RedBolt.PhysicsBox2D"]),
+        new("physics-jolt", "WebSamples/RedBolt.WebSamples.csproj", ["RedBolt.PhysicsJolt"]),
+        new("rmlui", "WebSamples/RedBolt.WebSamples.csproj", ["RedBolt.RmlUI"]),
     ];
 
     public static async Task<int> RunAsync(string[] args)
@@ -344,12 +355,16 @@ static class MonorepoApp
         try
         {
             Directory.CreateDirectory(stage);
-            foreach (var module in available)
+            var availableBundles = available.Select(module => module.Bundle!).DistinctBy(bundle => bundle.Slug).ToArray();
+            foreach (var bundle in availableBundles)
             {
-                var destination = Path.Combine(stage, module.Slug);
-                CopyDirectory(module.OutputDirectory!, destination);
-                Console.WriteLine($"Published {module.Name}: samples/{module.Slug}/");
+                var destination = Path.Combine(stage, bundle.Slug);
+                CopyDirectory(bundle.OutputDirectory, destination);
+                var bundleModules = available.Where(module => module.Bundle?.Slug == bundle.Slug).ToArray();
+                WriteBundleSelector(Path.Combine(destination, "index.html"), bundleModules);
+                Console.WriteLine($"Published {string.Join(", ", bundleModules.Select(module => module.Name))}: samples/{bundle.Slug}/");
             }
+            PoolResources(stage, availableBundles.Select(bundle => bundle.Slug));
 
             var samplesDirectory = Path.Combine(website, "samples");
             if (Directory.Exists(samplesDirectory))
@@ -374,45 +389,54 @@ static class MonorepoApp
         return 0;
     }
 
-    private static Task<int> BuildWebSamplesAsync(string root, PublishOptions options)
+    private static async Task<int> BuildWebSamplesAsync(string root, PublishOptions options)
     {
-        var arguments = new List<string>
+        var selected = options.Modules.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var bundles = WebBundles.Where(bundle => bundle.Modules.Any(selected.Contains)).ToArray();
+        foreach (var bundle in bundles)
         {
-            "--incremental",
-            "--build-config", options.Configuration,
-            "--test-config", "none",
-            "--platform", "web",
-            "--architectures", "x64",
-        };
-        foreach (var module in options.Modules)
-        {
-            arguments.Add("--module");
-            arguments.Add(module);
+            Console.WriteLine($"Building {options.Configuration} WebAssembly bundle '{bundle.Slug}'...");
+            var arguments = new[]
+            {
+                "build", Path.Combine(root, bundle.Project),
+                "--configuration", options.Configuration,
+                "-m:1",
+                "-p:RedBoltParallelization=1",
+                "-p:RedBoltPlatform=browser-wasm",
+                "-p:RedBoltEnablePlatforms=web",
+                "-p:RedBoltEnableModules=all",
+                $"-p:RedBoltWebBundle={bundle.Slug}",
+            };
+            if (await RunProcessAsync(root, "dotnet", arguments) != 0)
+                return 1;
         }
-
-        Console.WriteLine($"Building {options.Configuration} WebAssembly samples...");
-        return RunProcessAsync(root, Path.Combine(root, "ci.cs"), arguments);
+        return 0;
     }
 
     private static PublishedModule ReadWebModule(string root, WebModule module, string configuration)
     {
         var repository = Path.Combine(root, module.Name);
         var selector = Path.Combine(repository, "src", "RedBolt", "Sample", "Web", "wwwroot", "index.html");
-        var output = Path.Combine(repository, "build", "bin", configuration, "browser-wasm", "web", "wwwroot");
+        var bundle = WebBundles.FirstOrDefault(candidate => candidate.Modules.Contains(module.Name, StringComparer.OrdinalIgnoreCase));
+        var output = bundle is null ? null : Path.Combine(root, "build", "bin", configuration, "browser-wasm", "web", bundle.Slug, "wwwroot");
         var samples = File.Exists(selector) ? ReadSamples(selector) : [];
-        var available = File.Exists(Path.Combine(output, "index.html"));
-        return new PublishedModule(module, samples, available, available ? output : null);
+        if (module.Name == "RedBolt.Network")
+            samples = samples.Where(sample => !sample.Id.Equals("webrtc-stun", StringComparison.OrdinalIgnoreCase)).ToArray();
+        var available = output is not null && File.Exists(Path.Combine(output, "index.html"));
+        var publishedBundle = available ? new PublishedBundle(bundle!.Slug, output!) : null;
+        return new PublishedModule(module, samples, available, publishedBundle);
     }
 
     private static IReadOnlyList<WebSample> ReadSamples(string selector)
     {
         var html = File.ReadAllText(selector);
         html = Regex.Replace(html, "<!--.*?-->", "", RegexOptions.Singleline);
-        var pattern = "<option\\b(?=[^>]*\\bvalue=\"(?<id>[^\"]+)\")(?=[^>]*\\bdata-application=\"[^\"]+\")[^>]*>(?<name>.*?)</option>";
+        var pattern = "<option\\b(?=[^>]*\\bvalue=\"(?<id>[^\"]+)\")(?=[^>]*\\bdata-application=\"(?<application>[^\"]+)\")[^>]*>(?<name>.*?)</option>";
         var samples = Regex.Matches(html, pattern, RegexOptions.IgnoreCase | RegexOptions.Singleline)
             .Select(match => new WebSample(
                 WebUtility.HtmlDecode(match.Groups["id"].Value.Trim()),
-                WebUtility.HtmlDecode(Regex.Replace(match.Groups["name"].Value, "<[^>]+>", "").Trim())))
+                WebUtility.HtmlDecode(Regex.Replace(match.Groups["name"].Value, "<[^>]+>", "").Trim()),
+                WebUtility.HtmlDecode(match.Groups["application"].Value.Trim())))
             .ToArray();
 
         if (samples.Select(sample => sample.Id).Distinct(StringComparer.OrdinalIgnoreCase).Count() != samples.Length)
@@ -427,6 +451,52 @@ static class MonorepoApp
             Directory.CreateDirectory(Path.Combine(destination, Path.GetRelativePath(source, directory)));
         foreach (var file in Directory.EnumerateFiles(source, "*", SearchOption.AllDirectories))
             File.Copy(file, Path.Combine(destination, Path.GetRelativePath(source, file)), overwrite: true);
+    }
+
+    private static void WriteBundleSelector(string path, IReadOnlyList<PublishedModule> modules)
+    {
+        var html = File.ReadAllText(path);
+        var options = string.Join(Environment.NewLine, modules.SelectMany(module => module.Samples.Select(sample =>
+            $"        <option value=\"{WebUtility.HtmlEncode(module.Slug + ":" + sample.Id)}\" data-application=\"{WebUtility.HtmlEncode(sample.Application)}\">{WebUtility.HtmlEncode(sample.Name)}</option>")));
+        var replacement = $"<select id=\"sample\">{Environment.NewLine}{options}{Environment.NewLine}      </select>";
+        html = Regex.Replace(html, "<select\\s+id=\"sample\"[^>]*>.*?</select>", replacement,
+            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        File.WriteAllText(path, html);
+    }
+
+    private static void PoolResources(string stage, IEnumerable<string> bundleSlugs)
+    {
+        var shared = Path.Combine(stage, "shared", "resources");
+        foreach (var slug in bundleSlugs)
+        {
+            var bundle = Path.Combine(stage, slug);
+            var manifestPath = Path.Combine(bundle, "resources.manifest.json");
+            if (!File.Exists(manifestPath))
+                continue;
+
+            var manifest = JsonNode.Parse(File.ReadAllText(manifestPath))?.AsArray()
+                ?? throw new InvalidDataException($"Invalid resource manifest: {manifestPath}");
+            foreach (var item in manifest)
+            {
+                var entry = item?.AsObject() ?? throw new InvalidDataException($"Invalid resource entry: {manifestPath}");
+                var name = entry["name"]?.GetValue<string>()
+                    ?? throw new InvalidDataException($"Resource entry has no name: {manifestPath}");
+                var source = Path.GetFullPath(Path.Combine(bundle, "_framework", name));
+                if (!File.Exists(source))
+                    throw new InvalidDataException($"Resource does not exist: {source}");
+                var hash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(source))).ToLowerInvariant();
+                var fileName = hash + Path.GetExtension(source);
+                Directory.CreateDirectory(shared);
+                var destination = Path.Combine(shared, fileName);
+                if (!File.Exists(destination))
+                    File.Copy(source, destination);
+                entry["name"] = $"../shared/resources/{fileName}";
+            }
+            File.WriteAllText(manifestPath, manifest.ToJsonString(new JsonSerializerOptions { WriteIndented = true }) + Environment.NewLine);
+            var resources = Path.Combine(bundle, "resources");
+            if (Directory.Exists(resources))
+                Directory.Delete(resources, recursive: true);
+        }
     }
 
     private static void WriteCatalog(string path, IReadOnlyList<PublishedModule> modules)
@@ -445,6 +515,8 @@ static class MonorepoApp
                 writer.WriteString("description", module.Description);
                 writer.WriteString("repository", $"https://github.com/{GitHubOrganization}/{module.Name}");
                 writer.WriteBoolean("available", module.Available);
+                if (module.Bundle is not null)
+                    writer.WriteString("bundle", module.Bundle.Slug);
                 writer.WriteStartArray("samples");
                 foreach (var sample in module.Samples)
                 {
@@ -617,7 +689,9 @@ static class MonorepoApp
 
     private sealed record Repository(string Name, string RelativePath, bool EnabledByDefault);
     private sealed record WebModule(string Name, string Slug, string Category, string Description);
-    private sealed record WebSample(string Id, string Name);
+    private sealed record WebBundle(string Slug, string Project, IReadOnlyList<string> Modules);
+    private sealed record WebSample(string Id, string Name, string Application);
+    private sealed record PublishedBundle(string Slug, string OutputDirectory);
     private sealed class PublishOptions
     {
         public bool Build { get; set; }
@@ -631,10 +705,10 @@ static class MonorepoApp
         string Description,
         IReadOnlyList<WebSample> Samples,
         bool Available,
-        string? OutputDirectory)
+        PublishedBundle? Bundle)
     {
-        public PublishedModule(WebModule module, IReadOnlyList<WebSample> samples, bool available, string? outputDirectory)
-            : this(module.Name, module.Slug, module.Category, module.Description, samples, available, outputDirectory)
+        public PublishedModule(WebModule module, IReadOnlyList<WebSample> samples, bool available, PublishedBundle? bundle)
+            : this(module.Name, module.Slug, module.Category, module.Description, samples, available, bundle)
         {
         }
     }

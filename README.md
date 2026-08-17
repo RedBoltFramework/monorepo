@@ -40,13 +40,13 @@ Pull updates for every cloned module and developer external with rebase:
 ./monorepo.cs pull
 ```
 
-Deploy freshly built Release WebAssembly samples to the website repository:
+Build and deploy the grouped Release WebAssembly sample catalog to the website repository:
 
 ```sh
-./monorepo.cs publish-samples
+./monorepo.cs publish-samples --build
 ```
 
-The command copies each available module bundle to `RedBoltFramework.github.io/samples/<module>/` and rebuilds the landing-page catalog from the module's sample selector. Use `--build-config Debug` to deploy Debug output instead.
+The command builds one shared standard bundle plus dedicated bundles for Box2D, Jolt, and RmlUI. It copies each bundle to `RedBoltFramework.github.io/samples/`, pools identical resource packages by content hash, and rebuilds the landing-page catalog from the module selectors. Use `--module RedBolt.Network` for the logical bundle containing one module, or `--build-config Debug` for a local iteration build.
 
 ## Continuous integration
 
