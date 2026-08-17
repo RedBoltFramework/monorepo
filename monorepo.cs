@@ -1,4 +1,7 @@
-#!/usr/bin/env dotnet
+#!/bin/sh
+#if false
+exec dotnet run --file "$0" -- "$@"
+#endif
 
 using System.Diagnostics;
 using System.Net;
@@ -77,14 +80,14 @@ static class MonorepoApp
                 return 0;
             }
 
-            if (!TryParseBuildConfiguration(args[1..], out var configuration, out var publishError))
+            if (!TryParsePublishOptions(args[1..], out var publishOptions, out var publishError))
             {
                 Console.Error.WriteLine(publishError);
                 PrintPublishSamplesHelp();
                 return 1;
             }
 
-            return PublishSamples(configuration);
+            return await PublishSamplesAsync(publishOptions);
         }
 
         if (!string.Equals(args[0], "init", StringComparison.OrdinalIgnoreCase))
@@ -251,38 +254,72 @@ static class MonorepoApp
         return failed ? 1 : 0;
     }
 
-    private static bool TryParseBuildConfiguration(string[] args, out string configuration, out string? error)
+    private static bool TryParsePublishOptions(string[] args, out PublishOptions options, out string? error)
     {
-        configuration = "Release";
+        options = new PublishOptions();
         error = null;
-        if (args.Length == 0)
-            return true;
-
-        string? value = null;
-        if (args.Length == 2 && args[0] == "--build-config")
-            value = args[1];
-        else if (args.Length == 1 && args[0].StartsWith("--build-config=", StringComparison.Ordinal))
-            value = args[0]["--build-config=".Length..];
-        else
+        var modulesSpecified = false;
+        for (var index = 0; index < args.Length; index++)
         {
-            error = $"Unknown publish-samples option '{args[0]}'.";
-            return false;
-        }
+            var argument = args[index];
+            var separator = argument.IndexOf('=');
+            var name = separator >= 0 ? argument[..separator] : argument;
+            var value = separator >= 0 ? argument[(separator + 1)..] : null;
 
-        if (value.Equals("debug", StringComparison.OrdinalIgnoreCase))
-            configuration = "Debug";
-        else if (value.Equals("release", StringComparison.OrdinalIgnoreCase))
-            configuration = "Release";
-        else
-        {
-            error = $"Unknown build configuration '{value}'. Use Debug or Release.";
-            return false;
+            if (name == "--build")
+            {
+                options.Build = true;
+                continue;
+            }
+            if (name is not ("--build-config" or "--module" or "--modules"))
+            {
+                error = $"Unknown publish-samples option '{argument}'.";
+                return false;
+            }
+            if (value is null && index + 1 < args.Length && !args[index + 1].StartsWith("-", StringComparison.Ordinal))
+                value = args[++index];
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                error = $"Option '{name}' requires a value.";
+                return false;
+            }
+
+            if (name == "--build-config")
+            {
+                if (value.Equals("debug", StringComparison.OrdinalIgnoreCase))
+                    options.Configuration = "Debug";
+                else if (value.Equals("release", StringComparison.OrdinalIgnoreCase))
+                    options.Configuration = "Release";
+                else
+                {
+                    error = $"Unknown build configuration '{value}'. Use Debug or Release.";
+                    return false;
+                }
+                continue;
+            }
+
+            if (!modulesSpecified)
+            {
+                options.Modules.Clear();
+                modulesSpecified = true;
+            }
+            foreach (var moduleName in SplitModuleNames(value))
+            {
+                var module = WebModules.FirstOrDefault(candidate => candidate.Name.Equals(moduleName, StringComparison.OrdinalIgnoreCase));
+                if (module is null)
+                {
+                    error = $"Unknown web module '{moduleName}'.";
+                    return false;
+                }
+                if (!options.Modules.Contains(module.Name, StringComparer.OrdinalIgnoreCase))
+                    options.Modules.Add(module.Name);
+            }
         }
 
         return true;
     }
 
-    private static int PublishSamples(string configuration)
+    private static async Task<int> PublishSamplesAsync(PublishOptions options)
     {
         var root = GetScriptDirectory();
         var website = Path.Combine(root, "RedBoltFramework.github.io");
@@ -292,11 +329,14 @@ static class MonorepoApp
             return 1;
         }
 
-        var catalog = WebModules.Select(module => ReadWebModule(root, module, configuration)).ToArray();
+        if (options.Build && await BuildWebSamplesAsync(root, options) != 0)
+            return 1;
+
+        var catalog = WebModules.Select(module => ReadWebModule(root, module, options.Configuration)).ToArray();
         var available = catalog.Where(module => module.Available).ToArray();
         if (available.Length == 0)
         {
-            Console.Error.WriteLine($"No {configuration} web sample bundles were found. Build the web platform first.");
+            Console.Error.WriteLine($"No {options.Configuration} web sample bundles were found. Build the web platform first or pass --build.");
             return 1;
         }
 
@@ -329,9 +369,29 @@ static class MonorepoApp
         }
 
         foreach (var module in catalog.Where(module => !module.Available && module.Samples.Count > 0))
-            Console.WriteLine($"Skipped {module.Name}: no {configuration} web bundle found.");
+            Console.WriteLine($"Skipped {module.Name}: no {options.Configuration} web bundle found.");
         Console.WriteLine($"Updated {Path.Combine(website, "catalog.json")}.");
         return 0;
+    }
+
+    private static Task<int> BuildWebSamplesAsync(string root, PublishOptions options)
+    {
+        var arguments = new List<string>
+        {
+            "--incremental",
+            "--build-config", options.Configuration,
+            "--test-config", "none",
+            "--platform", "web",
+            "--architectures", "x64",
+        };
+        foreach (var module in options.Modules)
+        {
+            arguments.Add("--module");
+            arguments.Add(module);
+        }
+
+        Console.WriteLine($"Building {options.Configuration} WebAssembly samples...");
+        return RunProcessAsync(root, Path.Combine(root, "ci.cs"), arguments);
     }
 
     private static PublishedModule ReadWebModule(string root, WebModule module, string configuration)
@@ -459,6 +519,33 @@ static class MonorepoApp
         }
     }
 
+    private static async Task<int> RunProcessAsync(string directory, string fileName, IReadOnlyCollection<string> arguments)
+    {
+        using var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = fileName,
+                WorkingDirectory = directory,
+                UseShellExecute = false,
+            },
+        };
+        foreach (var argument in arguments)
+            process.StartInfo.ArgumentList.Add(argument);
+
+        try
+        {
+            process.Start();
+            await process.WaitForExitAsync();
+            return process.ExitCode;
+        }
+        catch (Exception exception) when (exception is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            Console.Error.WriteLine($"Cannot run '{fileName}': {exception.Message}");
+            return 1;
+        }
+    }
+
     private static void WriteWorkspace(string root, IReadOnlyList<Repository> repositories)
     {
         var vscodeDirectory = Path.Combine(root, ".vscode");
@@ -520,15 +607,23 @@ static class MonorepoApp
     private static void PrintPublishSamplesHelp()
     {
         Console.WriteLine("Usage:");
-        Console.WriteLine("  ./monorepo.cs publish-samples [--build-config Debug|Release]");
+        Console.WriteLine("  ./monorepo.cs publish-samples [--build] [--module NAME] [--build-config Debug|Release]");
         Console.WriteLine();
         Console.WriteLine("Copies built WebAssembly sample catalogs into RedBoltFramework.github.io/samples.");
+        Console.WriteLine("Pass --build to incrementally build the selected modules before publishing.");
+        Console.WriteLine("Module names can be repeated or comma-separated; the default is all modules.");
         Console.WriteLine("The default build configuration is Release.");
     }
 
     private sealed record Repository(string Name, string RelativePath, bool EnabledByDefault);
     private sealed record WebModule(string Name, string Slug, string Category, string Description);
     private sealed record WebSample(string Id, string Name);
+    private sealed class PublishOptions
+    {
+        public bool Build { get; set; }
+        public string Configuration { get; set; } = "Release";
+        public List<string> Modules { get; } = WebModules.Select(module => module.Name).ToList();
+    }
     private sealed record PublishedModule(
         string Name,
         string Slug,

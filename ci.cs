@@ -1,4 +1,7 @@
-#!/usr/bin/env dotnet
+#!/bin/sh
+#if false
+exec dotnet run --file "$0" -- "$@"
+#endif
 
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -19,7 +22,7 @@ static class CiApp
         new("RedBolt.Network", "RedBolt.Network.slnx"),
         new("RedBolt.Particles", "RedBolt.Particles.slnx"),
         new("RedBolt.PhysicsBox2D", "RedBolt.PhysicsBox2D.slnx"),
-        new("RedBolt.PhysicsJolt", "RedBolt.PhysicsJolt.slnx"),
+        new("RedBolt.PhysicsJolt", "RedBolt.PhysicsJolt.slnx", "RedBolt.Network"),
         new("RedBolt.RmlUI", "RedBolt.RmlUI.slnx"),
         new("RedBolt.XR", "RedBolt.XR.slnx"),
     ];
@@ -60,6 +63,7 @@ static class CiApp
         error = null;
         var platformsSpecified = false;
         var architecturesSpecified = false;
+        var modulesSpecified = false;
 
         for (var index = 0; index < args.Length; index++)
         {
@@ -87,6 +91,17 @@ static class CiApp
                     break;
                 case "--dry-run":
                     options.DryRun = true;
+                    break;
+                case "--module" or "--modules":
+                    if (!TryReadValue(args, ref index, name, inlineValue, out var modules, out error))
+                        return false;
+                    if (!modulesSpecified)
+                    {
+                        options.Modules.Clear();
+                        modulesSpecified = true;
+                    }
+                    if (!TryAddSelections(modules, Modules.Select(module => module.Directory).ToArray(), options.Modules, "module", out error))
+                        return false;
                     break;
                 case "--build-config" or "--build-configuration":
                     if (!TryReadValue(args, ref index, name, inlineValue, out var buildConfiguration, out error) ||
@@ -284,13 +299,35 @@ static class CiApp
         out Module[] availableModules,
         out string? error)
     {
-        availableModules = Modules
+        var presentModules = Modules
             .Where(module => File.Exists(Path.Combine(root, module.Directory, module.Solution)))
             .ToArray();
 
+        var allModulesRequested = options.Modules.Contains("all", StringComparer.OrdinalIgnoreCase);
+        var explicitlyRequestedModules = allModulesRequested
+            ? Modules
+            : Modules.Where(module => options.Modules.Contains(module.Directory, StringComparer.OrdinalIgnoreCase)).ToArray();
+        var requestedModules = options.BuildConfigurations.Length > 0
+            ? ExpandBuildDependencies(explicitlyRequestedModules)
+            : explicitlyRequestedModules;
+
+        foreach (var module in requestedModules.Except(explicitlyRequestedModules))
+            Console.WriteLine($"[include] {module.Directory} is required by the selected modules.");
+
+        var missingRequestedModules = requestedModules.Except(presentModules).ToArray();
+        if (!allModulesRequested && missingRequestedModules.Length > 0)
+        {
+            error = $"Requested module repositories are missing: {string.Join(", ", missingRequestedModules.Select(module => module.Directory))}.";
+            availableModules = [];
+            return false;
+        }
+
+        availableModules = requestedModules;
+
         if (options.BuildConfigurations.Length > 0)
         {
-            var engineAvailable = availableModules.Any(module => module.Directory == "RedBolt");
+            var engine = Modules[0];
+            var engineAvailable = presentModules.Contains(engine);
             if (!engineAvailable)
             {
                 Console.WriteLine("[skip] Module builds require the missing repository 'RedBolt'.");
@@ -299,8 +336,10 @@ static class CiApp
             }
             else
             {
-                foreach (var module in Modules.Except(availableModules))
+                foreach (var module in missingRequestedModules)
                     Console.WriteLine($"[skip] Module repository '{module.Directory}' is not available.");
+
+                availableModules = availableModules.Intersect(presentModules).ToArray();
             }
         }
 
@@ -334,6 +373,24 @@ static class CiApp
 
         error = null;
         return true;
+    }
+
+    private static Module[] ExpandBuildDependencies(IReadOnlyCollection<Module> selected)
+    {
+        var enabled = selected.Select(module => module.Directory).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        if (selected.Any(module => module.Directory != "RedBolt"))
+            enabled.Add("RedBolt");
+
+        bool added;
+        do
+        {
+            added = false;
+            foreach (var dependency in Modules.Where(module => enabled.Contains(module.Directory)).SelectMany(module => module.Dependencies))
+                added |= enabled.Add(dependency);
+        }
+        while (added);
+
+        return Modules.Where(module => enabled.Contains(module.Directory)).ToArray();
     }
 
     private static bool CommandExists(string command)
@@ -422,6 +479,7 @@ static class CiApp
         Console.WriteLine("Options:");
         Console.WriteLine("  --incremental                 Do not clean before builds");
         Console.WriteLine("  --no-self-contained           Build framework-dependent outputs");
+        Console.WriteLine("  --module VALUE                all or a module directory; repeatable (default: all)");
         Console.WriteLine("  --build-config VALUE          all, Debug, Release, or none (default: all)");
         Console.WriteLine("  --test-config VALUE           all, Debug, Release, or none (default: all)");
         Console.WriteLine("  --tests FILTER                Run tests matching a VSTest filter");
@@ -436,12 +494,13 @@ static class CiApp
         Console.WriteLine("Arguments after '--' are forwarded to the parallel dotnet test runner.");
         Console.WriteLine();
         Console.WriteLine("Examples:");
-        Console.WriteLine("  ./ci.cs --incremental --build-config Debug --test-config Debug");
+        Console.WriteLine("  ./ci.cs --incremental --module RedBolt.PhysicsJolt --build-config Debug --test-config none --platform linux --architectures x64");
+        Console.WriteLine("  ./ci.cs --incremental --build-config none --test-config Debug --tests 'FullyQualifiedName~PhysicsJolt'");
         Console.WriteLine("  ./ci.cs --test-config Release --tests 'FullyQualifiedName~PhysicsJolt'");
         Console.WriteLine("  ./ci.cs --test-config none --platform linux,android --architectures x64");
     }
 
-    private sealed record Module(string Directory, string Solution);
+    private sealed record Module(string Directory, string Solution, params string[] Dependencies);
 
     private sealed class Options
     {
@@ -451,6 +510,7 @@ static class CiApp
         public bool DryRun { get; set; }
         public string[] BuildConfigurations { get; set; } = ["Debug", "Release"];
         public string[] TestConfigurations { get; set; } = ["Debug", "Release"];
+        public List<string> Modules { get; } = ["all"];
         public List<string> Platforms { get; } = ["all"];
         public List<string> Architectures { get; } = ["all"];
         public int Parallelization { get; set; } = 4;
@@ -469,6 +529,7 @@ static class CiApp
             stopwatch.Start();
             Console.WriteLine("RedBolt CI pipeline");
             Console.WriteLine($"  clean={!options.Incremental} build={Format(options.BuildConfigurations)} test={Format(options.TestConfigurations)}");
+            Console.WriteLine($"  modules={Format(availableModules.Select(module => module.Directory))}");
             Console.WriteLine($"  platforms={Format(options.Platforms)} architectures={Format(options.Architectures)} parallelization={options.Parallelization} test-shards={options.TestShards}");
 
             if (!options.Incremental && options.BuildConfigurations.Length > 0 && !CleanBuildOutputs())
@@ -537,6 +598,10 @@ static class CiApp
             };
             if (options.NoSelfContained)
                 arguments.Add("--no-self-contained");
+            if (module.Directory != "RedBolt")
+                arguments.Add("-p:RedBoltReuseCoreProjectReferences=true");
+            if (module.Dependencies.Contains("RedBolt.Network", StringComparer.OrdinalIgnoreCase))
+                arguments.Add("-p:RedBoltReuseNetworkProjectReferences=true");
 
             Console.WriteLine($"{Environment.NewLine}[build] {module.Directory} {configuration} ({Format(options.Platforms)}/{Format(options.Architectures)})");
             return RunProcessAsync(Path.Combine(root, module.Directory), "dotnet", arguments);
