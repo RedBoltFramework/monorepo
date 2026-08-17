@@ -34,10 +34,11 @@ Show command help with:
 ./monorepo.cs init --help
 ```
 
-Pull updates for every cloned module and developer external with rebase:
+Pull updates from `origin` for the monorepo, every cloned module, and every cloned developer external with rebase. The ref defaults to `master`:
 
 ```sh
 ./monorepo.cs pull
+./monorepo.cs pull feature/my-change
 ```
 
 Build and deploy the grouped Release WebAssembly sample catalog to the website repository:

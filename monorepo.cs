@@ -74,13 +74,20 @@ static class MonorepoApp
 
         if (string.Equals(args[0], "pull", StringComparison.OrdinalIgnoreCase))
         {
-            if (args.Length != 1)
+            if (args.Length == 2 && args[1] is "-h" or "--help")
             {
-                Console.Error.WriteLine("The pull subcommand does not accept options.");
+                PrintPullHelp();
+                return 0;
+            }
+
+            if (args.Length > 2 || args.Length == 2 && string.IsNullOrWhiteSpace(args[1]))
+            {
+                Console.Error.WriteLine("The pull subcommand accepts at most one non-empty ref.");
+                PrintPullHelp();
                 return 1;
             }
 
-            return await PullAsync();
+            return await PullAsync(args.Length == 2 ? args[1] : "master");
         }
 
         if (string.Equals(args[0], "publish-samples", StringComparison.OrdinalIgnoreCase))
@@ -241,11 +248,15 @@ static class MonorepoApp
         return failed ? 1 : 0;
     }
 
-    private static async Task<int> PullAsync()
+    private static async Task<int> PullAsync(string reference)
     {
         var root = GetScriptDirectory();
         var failed = false;
         var found = 0;
+
+        Console.WriteLine("Pulling monorepo...");
+        if (await RunGitPullAsync(root, reference) != 0)
+            failed = true;
 
         foreach (var repository in Repositories)
         {
@@ -255,12 +266,12 @@ static class MonorepoApp
 
             found++;
             Console.WriteLine($"Pulling {repository.RelativePath}...");
-            if (await RunGitPullAsync(directory) != 0)
+            if (await RunGitPullAsync(directory, reference) != 0)
                 failed = true;
         }
 
         if (found == 0)
-            Console.WriteLine("No cloned repositories found.");
+            Console.WriteLine("No cloned module repositories found.");
 
         return failed ? 1 : 0;
     }
@@ -562,7 +573,7 @@ static class MonorepoApp
         }
     }
 
-    private static async Task<int> RunGitPullAsync(string directory)
+    private static async Task<int> RunGitPullAsync(string directory, string reference)
     {
         using var process = new Process
         {
@@ -577,6 +588,8 @@ static class MonorepoApp
         process.StartInfo.ArgumentList.Add(directory);
         process.StartInfo.ArgumentList.Add("pull");
         process.StartInfo.ArgumentList.Add("--rebase");
+        process.StartInfo.ArgumentList.Add("origin");
+        process.StartInfo.ArgumentList.Add(reference);
 
         try
         {
@@ -660,6 +673,15 @@ static class MonorepoApp
         Console.WriteLine("  publish-samples  Deploy built web samples to the website");
         Console.WriteLine();
         Console.WriteLine("Run './monorepo.cs init --help' for init options.");
+    }
+
+    private static void PrintPullHelp()
+    {
+        Console.WriteLine("Usage:");
+        Console.WriteLine("  ./monorepo.cs pull [REF]");
+        Console.WriteLine();
+        Console.WriteLine("Pulls the specified ref from origin into every cloned repository with rebase.");
+        Console.WriteLine("The default ref is master.");
     }
 
     private static void PrintInitHelp()
