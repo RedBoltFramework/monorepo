@@ -13,6 +13,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
   <Import Project="$(RedBoltRoot)/src/Directory.Build.props" />
   <Import Project="$(RedBoltRoot)/src/RedBolt/Build/Sample.props" />
   <PropertyGroup>
+    <TargetFrameworks>$(RedBoltTargetFramework)</TargetFrameworks>
     <RedBoltWebBundle Condition="'$(RedBoltWebBundle)' == ''">standard</RedBoltWebBundle>
     <BaseIntermediateOutputPath>$(RedBoltIntermediateRoot)/$(MSBuildProjectName)/$(RedBoltWebBundle)/</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)/</IntermediateOutputPath>

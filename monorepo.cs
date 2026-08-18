@@ -409,8 +409,9 @@ static class MonorepoApp
             Console.WriteLine($"Building {options.Configuration} WebAssembly bundle '{bundle.Slug}'...");
             var arguments = new[]
             {
-                "build", Path.Combine(root, bundle.Project),
+                "publish", Path.Combine(root, bundle.Project),
                 "--configuration", options.Configuration,
+                "--runtime", "browser-wasm",
                 "-m:1",
                 "-p:RedBoltParallelization=1",
                 "-p:RedBoltPlatform=browser-wasm",
