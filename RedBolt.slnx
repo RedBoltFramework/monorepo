@@ -1,0 +1,249 @@
+﻿<Solution>
+  <Folder Name="/RedBolt/extern/SharpCpp/src/">
+    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Metadata/SharpCpp.Metadata.csproj" />
+    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Model/SharpCpp.Model.csproj" />
+    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Parsing/SharpCpp.Parsing.csproj" />
+    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Pipeline/SharpCpp.Pipeline.csproj" />
+    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Rendering/SharpCpp.Rendering.csproj" />
+    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Std/SharpCpp.Std.csproj" />
+    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Support/SharpCpp.Support.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt/">
+    <Project Path="RedBolt/src/RedBolt/Audio/RedBolt.Audio.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Editor/RedBolt.Editor.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Core/RedBolt.Core.csproj" />
+    <Project Path="RedBolt/src/RedBolt/DearImGui/RedBolt.DearImGui.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Utility/RedBolt.Utility.csproj" />
+    <Project Path="RedBolt/src/RedBolt/UserCode/Desktop/RedBolt.UserCode.Desktop.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt/Generator/">
+    <Project Path="RedBolt/src/RedBolt/Generator/Dependencies/RedBolt.Generator.Dependencies.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Generator/Reflection/RedBolt.Generator.Reflection.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt/Tools/">
+    <Project Path="RedBolt/src/RedBolt/Tools/PackageTool/RedBolt.PackageTool.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt/Native/">
+    <Project Path="RedBolt/src/RedBolt/Native/DearImGui/RedBolt.Bindings.DearImGui.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/Diligent/RedBolt.Bindings.Diligent.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/Glslang/RedBolt.Bindings.Glslang.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/HarfBuzz/RedBolt.Bindings.HarfBuzz.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/Lz4/RedBolt.Bindings.Lz4.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/Sdl/RedBolt.Bindings.Sdl.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/ShaderCompiler/RedBolt.Bindings.ShaderCompiler.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/SpirVCross/RedBolt.Bindings.SpirVCross.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/SpirVTools/RedBolt.Bindings.SpirVTools.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/Stb/RedBolt.Bindings.Stb.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/TinyGltf/RedBolt.Bindings.TinyGltf.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/WebP/RedBolt.Bindings.WebP.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/RedBolt.Native.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/RedBolt.Native.Android.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Native/RedBolt.Native.Web.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt/Samples/">
+    <Project Path="RedBolt/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/HelloGUI/RedBolt.Sample.HelloGUI.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/MultipleViewports/RedBolt.Sample.MultipleViewports.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/HelloWorld/RedBolt.Sample.HelloWorld.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/AnimatingScene/RedBolt.Sample.AnimatingScene.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/RenderToTexture/RedBolt.Sample.RenderToTexture.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/WindowSettings/RedBolt.Sample.WindowSettings.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/StaticScene/RedBolt.Sample.StaticScene.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/DynamicGeometry/RedBolt.Sample.DynamicGeometry.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/CameraShake/RedBolt.Sample.CameraShake.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/Billboards/RedBolt.Sample.Billboards.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/MaterialAnimation/RedBolt.Sample.MaterialAnimation.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/HugeObjectCount/RedBolt.Sample.HugeObjectCount.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/CameraOperator/RedBolt.Sample.CameraOperator.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/SkeletalAnimation/RedBolt.Sample.SkeletalAnimation.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/SoundEffects/RedBolt.Sample.SoundEffects.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/SoundSynthesis/RedBolt.Sample.SoundSynthesis.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/Decals/RedBolt.Sample.Decals.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/PointerAdapter/RedBolt.Sample.PointerAdapter.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/Text3D/RedBolt.Sample.Text3D.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/TextureFormats/RedBolt.Sample.TextureFormats.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/LightAnimation/RedBolt.Sample.LightAnimation.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/AggregatedInput/RedBolt.Sample.AggregatedInput.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/InputLogger/RedBolt.Sample.InputLogger.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/VirtualFileSystem/RedBolt.Sample.VirtualFileSystem.csproj" />
+    <Project Path="RedBolt/src/RedBolt/Sample/Web/RedBolt.Sample.Web.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.2D/">
+    <Project Path="RedBolt.2D/src/RedBolt/2D/RedBolt.2D.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.2D/Samples/">
+    <Project Path="RedBolt.2D/src/RedBolt/Sample/Urho2DParticle/RedBolt.Sample.Urho2DParticle.csproj" />
+    <Project Path="RedBolt.2D/src/RedBolt/Sample/Urho2DSprite/RedBolt.Sample.Urho2DSprite.csproj" />
+    <Project Path="RedBolt.2D/src/RedBolt/Sample/Urho2DSpriterAnimation/RedBolt.Sample.Urho2DSpriterAnimation.csproj" />
+    <Project Path="RedBolt.2D/src/RedBolt/Sample/Urho2DStretchableSprite/RedBolt.Sample.Urho2DStretchableSprite.csproj" />
+    <Project Path="RedBolt.2D/src/RedBolt/Sample/Urho2DTileMap/RedBolt.Sample.Urho2DTileMap.csproj" />
+    <Project Path="RedBolt.2D/src/RedBolt/Sample/Web/RedBolt.Sample.Web.csproj" />
+    <Project Path="RedBolt.2D/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Actions/">
+    <Project Path="RedBolt.Actions/src/RedBolt/Actions/RedBolt.Actions.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Actions/Samples/">
+    <Project Path="RedBolt.Actions/src/RedBolt/Sample/Actions/RedBolt.Sample.Actions.csproj" />
+    <Project Path="RedBolt.Actions/src/RedBolt/Sample/Web/RedBolt.Sample.Web.csproj" />
+    <Project Path="RedBolt.Actions/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.CSG/">
+    <Project Path="RedBolt.CSG/src/RedBolt/CSG/RedBolt.CSG.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.CSG/Samples/">
+    <Project Path="RedBolt.CSG/src/RedBolt/Sample/CSG/RedBolt.Sample.CSG.csproj" />
+    <Project Path="RedBolt.CSG/src/RedBolt/Sample/Web/RedBolt.Sample.Web.csproj" />
+    <Project Path="RedBolt.CSG/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Glow/">
+    <Project Path="RedBolt.Glow/src/RedBolt/Glow/RedBolt.Glow.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Glow/Generator/">
+    <Project Path="RedBolt.Glow/src/RedBolt/Generator/Dependencies/RedBolt.Glow.Generator.Dependencies.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Glow/Native/">
+    <Project Path="RedBolt.Glow/src/RedBolt/Native/RedBolt.Glow.Native.csproj" />
+    <Project Path="RedBolt.Glow/src/RedBolt/Native/XAtlas/RedBolt.Bindings.XAtlas.csproj" />
+    <Project Path="RedBolt.Glow/src/RedBolt/Native/Embree/RedBolt.Bindings.Embree.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Glow/Tools/">
+    <Project Path="RedBolt.Glow/src/RedBolt/Glow.Tools/RedBolt.Glow.Tools.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Glow/Editor/">
+    <Project Path="RedBolt.Glow/src/RedBolt/Glow.Editor/RedBolt.Glow.Editor.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Glow/Samples/">
+    <Project Path="RedBolt.Glow/src/RedBolt/Sample/BakedLighting/RedBolt.Sample.BakedLighting.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.IK/">
+    <Project Path="RedBolt.IK/src/RedBolt/IK/RedBolt.IK.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.IK/Tools/">
+    <Project Path="RedBolt.IK/src/RedBolt/IK.Tools/RedBolt.IK.Tools.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.IK/Editor/">
+    <Project Path="RedBolt.IK/src/RedBolt/IK.Editor/RedBolt.IK.Editor.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.IK/Samples/">
+    <Project Path="RedBolt.IK/src/RedBolt/Sample/InverseKinematics/RedBolt.Sample.InverseKinematics.csproj" />
+    <Project Path="RedBolt.IK/src/RedBolt/Sample/Web/RedBolt.Sample.Web.csproj" />
+    <Project Path="RedBolt.IK/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Navigation/">
+    <Project Path="RedBolt.Navigation/src/RedBolt/Navigation/RedBolt.Navigation.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Navigation/Samples/">
+    <Project Path="RedBolt.Navigation/src/RedBolt/Sample/Navigation/RedBolt.Sample.Navigation.csproj" />
+    <Project Path="RedBolt.Navigation/src/RedBolt/Sample/CrowdNavigation/RedBolt.Sample.CrowdNavigation.csproj" />
+    <Project Path="RedBolt.Navigation/src/RedBolt/Sample/Web/RedBolt.Sample.Web.csproj" />
+    <Project Path="RedBolt.Navigation/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Network/">
+    <Project Path="RedBolt.Network/src/RedBolt/Network/RedBolt.Network.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Network/Generator/">
+    <Project Path="RedBolt.Network/src/RedBolt/Generator/Dependencies/RedBolt.Network.Generator.Dependencies.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Network/Native/">
+    <Project Path="RedBolt.Network/src/RedBolt/Native/LibDataChannel/RedBolt.Bindings.LibDataChannel.csproj" />
+    <Project Path="RedBolt.Network/src/RedBolt/Native/RedBolt.Network.Native.csproj" />
+    <Project Path="RedBolt.Network/src/RedBolt/Native/RedBolt.Network.Native.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Network/Samples/">
+    <Project Path="RedBolt.Network/src/RedBolt/Sample/Chat/RedBolt.Sample.Chat.csproj" />
+    <Project Path="RedBolt.Network/src/RedBolt/Sample/HttpRequestDemo/RedBolt.Sample.HttpRequestDemo.csproj" />
+    <Project Path="RedBolt.Network/src/RedBolt/Sample/LANDiscovery/RedBolt.Sample.LANDiscovery.csproj" />
+    <Project Path="RedBolt.Network/src/RedBolt/Sample/WebRTCSTUN/RedBolt.Sample.WebRTCSTUN.csproj" />
+    <Project Path="RedBolt.Network/src/RedBolt/Sample/Web/RedBolt.Sample.Web.csproj" />
+    <Project Path="RedBolt.Network/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Particles/">
+    <Project Path="RedBolt.Particles/src/RedBolt/Particles/RedBolt.Particles.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.Particles/Samples/">
+    <Project Path="RedBolt.Particles/src/RedBolt/Sample/Particles/RedBolt.Sample.Particles.csproj" />
+    <Project Path="RedBolt.Particles/src/RedBolt/Sample/Web/RedBolt.Sample.Web.csproj" />
+    <Project Path="RedBolt.Particles/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.PhysicsBox2D/">
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/PhysicsBox2D/RedBolt.PhysicsBox2D.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.PhysicsBox2D/Generator/">
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Generator/Dependencies/RedBolt.PhysicsBox2D.Generator.Dependencies.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.PhysicsBox2D/Native/">
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Native/Box2D/RedBolt.Bindings.Box2D.csproj" />
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Native/RedBolt.PhysicsBox2D.Native.csproj" />
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Native/RedBolt.PhysicsBox2D.Native.Web.csproj" />
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Native/RedBolt.PhysicsBox2D.Native.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.PhysicsBox2D/Samples/">
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Sample/Physics2D/RedBolt.Sample.Physics2D.csproj" />
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Sample/Physics2DConstraints/RedBolt.Sample.Physics2DConstraints.csproj" />
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Sample/Physics2DRope/RedBolt.Sample.Physics2DRope.csproj" />
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Sample/Urho2DIsometricDemo/RedBolt.Sample.Urho2DIsometricDemo.csproj" />
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Sample/Urho2DPlatformer/RedBolt.Sample.Urho2DPlatformer.csproj" />
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Sample/Web/RedBolt.Sample.Web.csproj" />
+    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.PhysicsJolt/">
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/PhysicsJolt/RedBolt.PhysicsJolt.csproj" />
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/PhysicsJolt.Network/RedBolt.PhysicsJolt.Network.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.PhysicsJolt/Generator/">
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Generator/Dependencies/RedBolt.PhysicsJolt.Generator.Dependencies.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.PhysicsJolt/Native/">
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Native/JoltPhysics/RedBolt.Bindings.Jolt.csproj" />
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Native/RedBolt.PhysicsJolt.Native.csproj" />
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Native/RedBolt.PhysicsJolt.Native.Web.csproj" />
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Native/RedBolt.PhysicsJolt.Native.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.PhysicsJolt/Samples/">
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Sample/AdvancedNetworking/RedBolt.Sample.AdvancedNetworking.csproj" />
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Sample/CharacterDemo/RedBolt.Sample.CharacterDemo.csproj" />
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Sample/KinematicCharacter/RedBolt.Sample.KinematicCharacter.csproj" />
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Sample/Physics/RedBolt.Sample.Physics.csproj" />
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Sample/RaycastVehicle/RedBolt.Sample.RaycastVehicle.csproj" />
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Sample/SceneReplication/RedBolt.Sample.SceneReplication.csproj" />
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Sample/Web/RedBolt.Sample.Web.csproj" />
+    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.RmlUI/">
+    <Project Path="RedBolt.RmlUI/src/RedBolt/RmlUI/RedBolt.RmlUI.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.RmlUI/Editor/">
+    <Project Path="RedBolt.RmlUI/src/RedBolt/RmlUI.Editor/RedBolt.RmlUI.Editor.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.RmlUI/Generator/">
+    <Project Path="RedBolt.RmlUI/src/RedBolt/Generator/Dependencies/RedBolt.RmlUI.Generator.Dependencies.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.RmlUI/Native/">
+    <Project Path="RedBolt.RmlUI/src/RedBolt/Native/RmlUi/RedBolt.Bindings.RmlUi.csproj" />
+    <Project Path="RedBolt.RmlUI/src/RedBolt/Native/RedBolt.RmlUI.Native.csproj" />
+    <Project Path="RedBolt.RmlUI/src/RedBolt/Native/RedBolt.RmlUI.Native.Web.csproj" />
+    <Project Path="RedBolt.RmlUI/src/RedBolt/Native/RedBolt.RmlUI.Native.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.RmlUI/Samples/">
+    <Project Path="RedBolt.RmlUI/src/RedBolt/Sample/AdvancedUI/RedBolt.Sample.AdvancedUI.csproj" />
+    <Project Path="RedBolt.RmlUI/src/RedBolt/Sample/HelloRmlUI/RedBolt.Sample.HelloRmlUI.csproj" />
+    <Project Path="RedBolt.RmlUI/src/RedBolt/Sample/Web/RedBolt.Sample.Web.csproj" />
+    <Project Path="RedBolt.RmlUI/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.XR/">
+    <Project Path="RedBolt.XR/src/RedBolt/XR/RedBolt.XR.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.XR/Generator/">
+    <Project Path="RedBolt.XR/src/RedBolt/Generator/Dependencies/RedBolt.XR.Generator.Dependencies.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.XR/Native/">
+    <Project Path="RedBolt.XR/src/RedBolt/Native/OpenXR/RedBolt.Bindings.OpenXR.csproj" />
+    <Project Path="RedBolt.XR/src/RedBolt/Native/RedBolt.XR.Native.csproj" />
+    <Project Path="RedBolt.XR/src/RedBolt/Native/RedBolt.XR.Native.Android.csproj" />
+  </Folder>
+  <Folder Name="/RedBolt.XR/Samples/">
+    <Project Path="RedBolt.XR/src/RedBolt/Sample/HelloVR/RedBolt.Sample.HelloVR.csproj" />
+    <Project Path="RedBolt.XR/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+  </Folder>
+</Solution>

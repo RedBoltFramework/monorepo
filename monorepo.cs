@@ -10,6 +10,8 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using System.Xml;
+using System.Xml.Linq;
 
 return await MonorepoApp.RunAsync(args);
 
@@ -243,8 +245,6 @@ static class MonorepoApp
                 failed = true;
         }
 
-        WriteWorkspace(root, ready);
-        Console.WriteLine($"Workspace: {Path.Combine(root, ".vscode", "RedBolt.code-workspace")}");
         return failed ? 1 : 0;
     }
 
@@ -629,32 +629,6 @@ static class MonorepoApp
             Console.Error.WriteLine($"Cannot run '{fileName}': {exception.Message}");
             return 1;
         }
-    }
-
-    private static void WriteWorkspace(string root, IReadOnlyList<Repository> repositories)
-    {
-        var vscodeDirectory = Path.Combine(root, ".vscode");
-        Directory.CreateDirectory(vscodeDirectory);
-
-        var workspacePath = Path.Combine(vscodeDirectory, "RedBolt.code-workspace");
-        using var stream = File.Create(workspacePath);
-        using (var writer = new Utf8JsonWriter(stream, new JsonWriterOptions { Indented = true }))
-        {
-            writer.WriteStartObject();
-            writer.WriteStartArray("folders");
-            foreach (var repository in repositories)
-            {
-                writer.WriteStartObject();
-                writer.WriteString("name", repository.Name);
-                writer.WriteString("path", "../" + repository.RelativePath.Replace(Path.DirectorySeparatorChar, '/'));
-                writer.WriteEndObject();
-            }
-
-            writer.WriteEndArray();
-            writer.WriteEndObject();
-        }
-
-        stream.WriteByte((byte)'\n');
     }
 
     private static string GetScriptDirectory([CallerFilePath] string sourcePath = "") =>

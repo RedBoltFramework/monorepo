@@ -1,6 +1,6 @@
 # RedBolt monorepo helper
 
-This repository contains a file-based C# app that prepares a RedBolt development workspace. The `init` subcommand clones the selected repositories beside the script and writes `.vscode/RedBolt.code-workspace` with one folder for each available clone.
+This repository contains a file-based C# app that prepares a RedBolt development workspace. The `init` subcommand clones the selected repositories beside the script.
 
 ## Requirements
 
@@ -27,6 +27,13 @@ The default selection includes all RedBolt repositories except `RedBolt.Tests`. 
 
 Module options can occur more than once and accept space-separated or comma-separated names. Use `--with-modules=all` to clone every repository, including tests and external repositories. Existing Git clones are kept. The command reports an error instead of overwriting a non-Git directory.
 
+There are two build modes:
+
+- **Monorepo mode:** from this repository root, run `dotnet build ./RedBolt.slnx`. The root solution builds the selected core and sibling leaf projects. Each project writes only to its own `<module>/build` directory. Select a platform variant with `-p:RedBoltBuildPlatform=linux-x64`, `win-x64`, `android-x64`, `android-arm64`, or `browser-wasm`.
+- **Module mode:** from `RedBolt/` or one sibling module repository, run `dotnet build ./<module>.slnx`. The module solution uses the same module-local build directory and resolves a sibling core checkout through `../RedBolt` when required.
+
+The build system marks these modes explicitly. Do not run the root and module solutions concurrently because they can share the core checkout's generated dependencies.
+
 Show command help with:
 
 ```sh
@@ -49,22 +56,22 @@ Build and deploy the grouped Release WebAssembly sample catalog to the website r
 
 The command builds one shared standard bundle plus dedicated bundles for Box2D, Jolt, and RmlUI. It copies each bundle to `RedBoltFramework.github.io/samples/`, pools identical resource packages by content hash, and rebuilds the landing-page catalog from the module selectors. Use `--module RedBolt.Network` for the logical bundle containing one module, or `--build-config Debug` for a local iteration build.
 
-## Continuous integration
+## Build and test
 
-`ci.cs` removes generated build trees, bootstraps RedBolt's CPM dependencies, builds every module for all platforms and architectures in Debug and Release, then builds and runs both test configurations:
-
-```sh
-./ci.cs
-```
-
-Use `--incremental` to keep existing build outputs. Relocated CMake platform caches are still removed because CMake cannot reuse them from another checkout path. Build and test configurations can be selected independently with `--build-config` and `--test-config`; use `none` to skip either phase. Platform and architecture options accept repeated or comma-separated values.
+The aggregate `RedBolt.slnx` is the canonical build and test entry point. Build the complete workspace with:
 
 ```sh
-./ci.cs --incremental --build-config Debug --test-config Debug
-./ci.cs --test-config Release --tests 'FullyQualifiedName~PhysicsJolt'
-./ci.cs --test-config none --platform linux,android --architectures x64
+dotnet build RedBolt.slnx --configuration Debug
+dotnet test RedBolt.slnx --configuration Debug --no-build --no-restore
 ```
 
-Run `./ci.cs --help` for all options and test argument forwarding.
-Repositories that are not cloned are reported and skipped. Tests run only when all module repositories are available because the test project references the complete workspace. Builds use RedBolt's default CPM-managed SharpCpp and imgui checkouts; the top-level `extern/SharpCpp` and `extern/imgui` clones are only for developer use.
-The runner uses CI tools from `~/.local/bin`, versioned tool packages under `~/.local/opt/*/bin`, or the system `PATH`. Explicit environment variables keep priority over detected Android and Java defaults.
+For fast core-only iteration, use `RedBolt/RedBolt.slnx`. A focused Linux/x64 build can select the platform and architecture with MSBuild properties:
+
+```sh
+dotnet build RedBolt/RedBolt.slnx --configuration Debug --no-restore \
+	-p:RedBoltDisablePlatforms=all -p:RedBoltEnablePlatforms=linux \
+	-p:RedBoltDisableArchitectures=all -p:RedBoltEnableArchitectures=x64 \
+	-p:RedBoltTestsEnabled=false
+```
+
+Module repositories retain their standalone `.slnx` files for independent builds. Builds use RedBolt's default CPM-managed SharpCpp and imgui checkouts; the top-level `extern/SharpCpp` and `extern/imgui` clones are only for developer use.

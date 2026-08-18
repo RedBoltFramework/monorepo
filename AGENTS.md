@@ -1,28 +1,34 @@
 # RedBolt monorepo workflow
 
-Use `./ci.cs` as the entry point for builds and tests. During iteration, select the smallest useful graph instead of running the default full matrix.
+Use `RedBolt.slnx` as the entry point for aggregate builds and tests. Use `RedBolt/RedBolt.slnx` for core-only iteration instead of building the default full graph.
 
 ## Fast iteration
 
-- Keep existing outputs with `--incremental`.
-- Select one or more repositories with `--module`; selecting an external module automatically builds `RedBolt` first and reuses those core outputs.
-- Select one configuration, platform, and architecture. Disable tests when the change does not require them.
-- Run the full default matrix only for final CI validation.
+- Keep existing outputs by using `--no-restore` after the solution has been restored.
+- Select one configuration, platform, and architecture with MSBuild properties when the change does not require the full graph.
+- Run the aggregate solution for final validation.
 
 Examples:
 
 ```sh
 # Core only, local desktop target.
-./ci.cs --incremental --module RedBolt --build-config Debug --test-config none --platform linux --architectures x64
+dotnet build RedBolt/RedBolt.slnx --configuration Debug --no-restore \
+	-p:RedBoltDisablePlatforms=all -p:RedBoltEnablePlatforms=linux \
+	-p:RedBoltDisableArchitectures=all -p:RedBoltEnableArchitectures=x64 \
+	-p:RedBoltTestsEnabled=false
 
 # One external module plus its core prerequisite.
-./ci.cs --incremental --module RedBolt.PhysicsJolt --build-config Debug --test-config none --platform linux --architectures x64
+dotnet build RedBolt.slnx --configuration Debug --no-restore \
+	-p:RedBoltDisablePlatforms=all -p:RedBoltEnablePlatforms=linux \
+	-p:RedBoltDisableArchitectures=all -p:RedBoltEnableArchitectures=x64 \
+	-p:RedBoltEnableModules=RedBolt.PhysicsJolt -p:RedBoltTestsEnabled=false
 
 # Reuse existing build outputs for a focused test pass.
-./ci.cs --incremental --build-config none --test-config Debug --tests 'FullyQualifiedName~PhysicsJolt'
+dotnet test RedBolt.slnx --configuration Debug --no-build --no-restore \
+	--filter 'FullyQualifiedName~PhysicsJolt'
 ```
 
-Pass extra `dotnet test` arguments after `--`. Use `./ci.cs --help` for all selectors.
+Use `dotnet build RedBolt.slnx --configuration Debug` for the aggregate build.
 
 ## Web samples
 
