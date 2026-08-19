@@ -17,7 +17,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <RedBoltWebBundle Condition="'$(RedBoltWebBundle)' == ''">standard</RedBoltWebBundle>
     <BaseIntermediateOutputPath>$(RedBoltIntermediateRoot)/$(MSBuildProjectName)/$(RedBoltWebBundle)/</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)/</IntermediateOutputPath>
-    <MSBuildProjectExtensionsPath>$(RedBoltRoot)/build/obj/restore/browser-wasm/$(MSBuildProjectName)/$(RedBoltWebBundle)/</MSBuildProjectExtensionsPath>
+    <MSBuildProjectExtensionsPath>$(RedBoltBuildRoot)/obj/restore/browser-wasm/$(MSBuildProjectName)/$(RedBoltWebBundle)/</MSBuildProjectExtensionsPath>
     <OutputPath>$(RedBoltIntermediateRoot)/staging/$(MSBuildProjectName)/$(RedBoltWebBundle)/$(Configuration)/</OutputPath>
   </PropertyGroup>
 </Project>
