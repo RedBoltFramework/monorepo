@@ -17,12 +17,11 @@ Run the executable script from any working directory:
 
 You can also use `dotnet run /path/to/monorepo/monorepo.cs -- init` on systems that do not use executable script files.
 
-The default selection includes all RedBolt repositories except `RedBolt.Tests`. External repositories `SharpCpp` and `imgui` are also disabled by default. Enable optional modules with `--with-modules` and disable default modules with `--no-modules`:
+The default selection includes all RedBolt repositories except `RedBolt.Tests`. External repositories `SharpCpp` and `imgui` are also disabled by default. Enable optional repositories with `--with-modules`:
 
 ```sh
 ./monorepo.cs init --with-modules RedBolt.Tests SharpCpp imgui
 ./monorepo.cs init --with-modules=all
-./monorepo.cs init --no-modules RedBolt.Glow,RedBolt.CSG
 ```
 
 Module options can occur more than once and accept space-separated or comma-separated names. Use `--with-modules=all` to clone every repository, including tests and external repositories. Existing Git clones are kept. The command reports an error instead of overwriting a non-Git directory.
@@ -54,7 +53,7 @@ Build and deploy the grouped Release WebAssembly sample catalog to the website r
 ./monorepo.cs publish-samples --build
 ```
 
-The command builds one shared standard bundle plus dedicated bundles for Box2D, Jolt, and RmlUI. It copies each bundle to `RedBoltFramework.github.io/samples/`, pools identical resource packages by content hash, and rebuilds the landing-page catalog from the module selectors. Use `--module RedBolt.Network` for the logical bundle containing one module, or `--build-config Debug` for a local iteration build.
+The command builds one shared standard bundle plus dedicated bundles for Box2D, Jolt, and RmlUI. It copies each bundle to `RedBoltFramework.github.io/samples/`, pools identical resource packages by content hash, and rebuilds the landing-page catalog from the module selectors. Add `--build-config Debug` for a local iteration build.
 
 ## Build and test
 

@@ -75,5 +75,5 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <RedBoltWebDataResource Include="$(RedBoltWebSamplesRoot)/RedBolt.RmlUI/bin/Data/**/*" />
   </ItemGroup>
 
-  <Import Project="$(RedBoltRoot)/src/RedBolt/Build/WebSample.targets" />
+  <Import Project="$(RedBoltRoot)/eng/RedBolt.ModuleBuild/WebSample.targets" />
 </Project>

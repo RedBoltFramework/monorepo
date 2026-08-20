@@ -36,9 +36,6 @@
     <Project Path="RedBolt/src/RedBolt/Native/Stb/RedBolt.Bindings.Stb.csproj" />
     <Project Path="RedBolt/src/RedBolt/Native/TinyGltf/RedBolt.Bindings.TinyGltf.csproj" />
     <Project Path="RedBolt/src/RedBolt/Native/WebP/RedBolt.Bindings.WebP.csproj" />
-    <Project Path="RedBolt/src/RedBolt/Native/RedBolt.Native.csproj" />
-    <Project Path="RedBolt/src/RedBolt/Native/RedBolt.Native.Android.csproj" />
-    <Project Path="RedBolt/src/RedBolt/Native/RedBolt.Native.Web.csproj" />
   </Folder>
   <Folder Name="/RedBolt/Samples/">
     <Project Path="RedBolt/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
@@ -103,7 +100,6 @@
     <Project Path="RedBolt.Glow/src/RedBolt/Generator/Dependencies/RedBolt.Glow.Generator.Dependencies.csproj" />
   </Folder>
   <Folder Name="/RedBolt.Glow/Native/">
-    <Project Path="RedBolt.Glow/src/RedBolt/Native/RedBolt.Glow.Native.csproj" />
     <Project Path="RedBolt.Glow/src/RedBolt/Native/XAtlas/RedBolt.Bindings.XAtlas.csproj" />
     <Project Path="RedBolt.Glow/src/RedBolt/Native/Embree/RedBolt.Bindings.Embree.csproj" />
   </Folder>
@@ -147,8 +143,6 @@
   </Folder>
   <Folder Name="/RedBolt.Network/Native/">
     <Project Path="RedBolt.Network/src/RedBolt/Native/LibDataChannel/RedBolt.Bindings.LibDataChannel.csproj" />
-    <Project Path="RedBolt.Network/src/RedBolt/Native/RedBolt.Network.Native.csproj" />
-    <Project Path="RedBolt.Network/src/RedBolt/Native/RedBolt.Network.Native.Android.csproj" />
   </Folder>
   <Folder Name="/RedBolt.Network/Samples/">
     <Project Path="RedBolt.Network/src/RedBolt/Sample/Chat/RedBolt.Sample.Chat.csproj" />
@@ -174,9 +168,6 @@
   </Folder>
   <Folder Name="/RedBolt.PhysicsBox2D/Native/">
     <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Native/Box2D/RedBolt.Bindings.Box2D.csproj" />
-    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Native/RedBolt.PhysicsBox2D.Native.csproj" />
-    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Native/RedBolt.PhysicsBox2D.Native.Web.csproj" />
-    <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Native/RedBolt.PhysicsBox2D.Native.Android.csproj" />
   </Folder>
   <Folder Name="/RedBolt.PhysicsBox2D/Samples/">
     <Project Path="RedBolt.PhysicsBox2D/src/RedBolt/Sample/Physics2D/RedBolt.Sample.Physics2D.csproj" />
@@ -196,9 +187,6 @@
   </Folder>
   <Folder Name="/RedBolt.PhysicsJolt/Native/">
     <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Native/JoltPhysics/RedBolt.Bindings.Jolt.csproj" />
-    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Native/RedBolt.PhysicsJolt.Native.csproj" />
-    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Native/RedBolt.PhysicsJolt.Native.Web.csproj" />
-    <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Native/RedBolt.PhysicsJolt.Native.Android.csproj" />
   </Folder>
   <Folder Name="/RedBolt.PhysicsJolt/Samples/">
     <Project Path="RedBolt.PhysicsJolt/src/RedBolt/Sample/AdvancedNetworking/RedBolt.Sample.AdvancedNetworking.csproj" />
@@ -221,9 +209,6 @@
   </Folder>
   <Folder Name="/RedBolt.RmlUI/Native/">
     <Project Path="RedBolt.RmlUI/src/RedBolt/Native/RmlUi/RedBolt.Bindings.RmlUi.csproj" />
-    <Project Path="RedBolt.RmlUI/src/RedBolt/Native/RedBolt.RmlUI.Native.csproj" />
-    <Project Path="RedBolt.RmlUI/src/RedBolt/Native/RedBolt.RmlUI.Native.Web.csproj" />
-    <Project Path="RedBolt.RmlUI/src/RedBolt/Native/RedBolt.RmlUI.Native.Android.csproj" />
   </Folder>
   <Folder Name="/RedBolt.RmlUI/Samples/">
     <Project Path="RedBolt.RmlUI/src/RedBolt/Sample/AdvancedUI/RedBolt.Sample.AdvancedUI.csproj" />
@@ -239,8 +224,6 @@
   </Folder>
   <Folder Name="/RedBolt.XR/Native/">
     <Project Path="RedBolt.XR/src/RedBolt/Native/OpenXR/RedBolt.Bindings.OpenXR.csproj" />
-    <Project Path="RedBolt.XR/src/RedBolt/Native/RedBolt.XR.Native.csproj" />
-    <Project Path="RedBolt.XR/src/RedBolt/Native/RedBolt.XR.Native.Android.csproj" />
   </Folder>
   <Folder Name="/RedBolt.XR/Samples/">
     <Project Path="RedBolt.XR/src/RedBolt/Sample/HelloVR/RedBolt.Sample.HelloVR.csproj" />

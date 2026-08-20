@@ -17,11 +17,11 @@ dotnet build RedBolt/RedBolt.slnx --configuration Debug --no-restore \
 	-p:RedBoltDisableArchitectures=all -p:RedBoltEnableArchitectures=x64 \
 	-p:RedBoltTestsEnabled=false
 
-# One external module plus its core prerequisite.
+# One full external-module prerequisite check.
 dotnet build RedBolt.slnx --configuration Debug --no-restore \
 	-p:RedBoltDisablePlatforms=all -p:RedBoltEnablePlatforms=linux \
 	-p:RedBoltDisableArchitectures=all -p:RedBoltEnableArchitectures=x64 \
-	-p:RedBoltEnableModules=RedBolt.PhysicsJolt -p:RedBoltTestsEnabled=false
+	-p:RedBoltTestsEnabled=false
 
 # Reuse existing build outputs for a focused test pass.
 dotnet test RedBolt.slnx --configuration Debug --no-build --no-restore \
@@ -32,6 +32,6 @@ Use `dotnet build RedBolt.slnx --configuration Debug` for the aggregate build.
 
 ## Web samples
 
-Run `./monorepo.cs publish-samples --build --module RedBolt --build-config Debug` for a focused build-and-publish pass. Omit `--module` and use `Release` for the complete deployed catalog. The command refreshes `RedBoltFramework.github.io/samples/` and `catalog.json`.
+Run `./monorepo.cs publish-samples --build --build-config Debug` for a local build-and-publish pass. Use `Release` for the complete deployed catalog. The command refreshes `RedBoltFramework.github.io/samples/` and `catalog.json`.
 
 Repository-specific instructions in nested `AGENTS.md` files still apply when editing those repositories.

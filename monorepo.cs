@@ -150,7 +150,7 @@ static class MonorepoApp
             var option = separator >= 0 ? argument[..separator] : argument;
             var values = new List<string>();
 
-            if (option is not ("--with-modules" or "--no-modules"))
+            if (option is not "--with-modules")
             {
                 selected = [];
                 error = $"Unknown option '{argument}'.";
@@ -181,7 +181,7 @@ static class MonorepoApp
 
             foreach (var value in values)
             {
-                if (option == "--with-modules" && string.Equals(value, "all", StringComparison.OrdinalIgnoreCase))
+                if (string.Equals(value, "all", StringComparison.OrdinalIgnoreCase))
                 {
                     enabled.UnionWith(Repositories.Select(repository => repository.Name));
                     continue;
@@ -197,10 +197,7 @@ static class MonorepoApp
                     return false;
                 }
 
-                if (option == "--with-modules")
-                    enabled.Add(repository.Name);
-                else
-                    enabled.Remove(repository.Name);
+                enabled.Add(repository.Name);
             }
         }
 
@@ -280,7 +277,6 @@ static class MonorepoApp
     {
         options = new PublishOptions();
         error = null;
-        var modulesSpecified = false;
         for (var index = 0; index < args.Length; index++)
         {
             var argument = args[index];
@@ -293,7 +289,7 @@ static class MonorepoApp
                 options.Build = true;
                 continue;
             }
-            if (name is not ("--build-config" or "--module" or "--modules"))
+            if (name != "--build-config")
             {
                 error = $"Unknown publish-samples option '{argument}'.";
                 return false;
@@ -318,23 +314,6 @@ static class MonorepoApp
                     return false;
                 }
                 continue;
-            }
-
-            if (!modulesSpecified)
-            {
-                options.Modules.Clear();
-                modulesSpecified = true;
-            }
-            foreach (var moduleName in SplitModuleNames(value))
-            {
-                var module = WebModules.FirstOrDefault(candidate => candidate.Name.Equals(moduleName, StringComparison.OrdinalIgnoreCase));
-                if (module is null)
-                {
-                    error = $"Unknown web module '{moduleName}'.";
-                    return false;
-                }
-                if (!options.Modules.Contains(module.Name, StringComparer.OrdinalIgnoreCase))
-                    options.Modules.Add(module.Name);
             }
         }
 
@@ -402,9 +381,7 @@ static class MonorepoApp
 
     private static async Task<int> BuildWebSamplesAsync(string root, PublishOptions options)
     {
-        var selected = options.Modules.ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var bundles = WebBundles.Where(bundle => bundle.Modules.Any(selected.Contains)).ToArray();
-        foreach (var bundle in bundles)
+        foreach (var bundle in WebBundles)
         {
             Console.WriteLine($"Building {options.Configuration} WebAssembly bundle '{bundle.Slug}'...");
             var arguments = new[]
@@ -416,7 +393,6 @@ static class MonorepoApp
                 "-p:RedBoltParallelization=1",
                 "-p:RedBoltPlatform=browser-wasm",
                 "-p:RedBoltEnablePlatforms=web",
-                "-p:RedBoltEnableModules=all",
                 $"-p:RedBoltWebBundle={bundle.Slug}",
             };
             if (await RunProcessAsync(root, "dotnet", arguments) != 0)
@@ -662,11 +638,10 @@ static class MonorepoApp
     private static void PrintInitHelp()
     {
         Console.WriteLine("Usage:");
-        Console.WriteLine("  ./monorepo.cs init [--with-modules NAME...] [--no-modules NAME...]");
+        Console.WriteLine("  ./monorepo.cs init [--with-modules NAME...]");
         Console.WriteLine();
         Console.WriteLine("Options:");
-        Console.WriteLine("  --with-modules NAME...  Enable optional modules");
-        Console.WriteLine("  --no-modules NAME...    Disable default modules");
+        Console.WriteLine("  --with-modules NAME...  Enable optional repositories");
         Console.WriteLine();
         Console.WriteLine("Module names can be repeated or separated with commas.");
         Console.WriteLine("Use '--with-modules=all' to enable every module.");
@@ -676,11 +651,10 @@ static class MonorepoApp
     private static void PrintPublishSamplesHelp()
     {
         Console.WriteLine("Usage:");
-        Console.WriteLine("  ./monorepo.cs publish-samples [--build] [--module NAME] [--build-config Debug|Release]");
+        Console.WriteLine("  ./monorepo.cs publish-samples [--build] [--build-config Debug|Release]");
         Console.WriteLine();
         Console.WriteLine("Copies built WebAssembly sample catalogs into RedBoltFramework.github.io/samples.");
-        Console.WriteLine("Pass --build to incrementally build the selected modules before publishing.");
-        Console.WriteLine("Module names can be repeated or comma-separated; the default is all modules.");
+        Console.WriteLine("Pass --build to rebuild all WebAssembly bundles before publishing.");
         Console.WriteLine("The default build configuration is Release.");
     }
 
@@ -693,7 +667,6 @@ static class MonorepoApp
     {
         public bool Build { get; set; }
         public string Configuration { get; set; } = "Release";
-        public List<string> Modules { get; } = WebModules.Select(module => module.Name).ToList();
     }
     private sealed record PublishedModule(
         string Name,
