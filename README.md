@@ -47,13 +47,30 @@ Pull updates from `origin` for the monorepo, every cloned module, and every clon
 ./monorepo.cs pull feature/my-change
 ```
 
+Each module declares its web and Android catalog in `src/RedBolt/Sample/SampleCatalog.json`. Regenerate all module-local hosts, or verify that committed hosts are current, with:
+
+```sh
+./monorepo.cs generate-samples
+./monorepo.cs generate-samples --check
+```
+
+Generate one compatible aggregate host by giving an output, a host name, and a module list:
+
+```sh
+./monorepo.cs generate-samples \
+  --output Samples --name all \
+  --modules RedBolt RedBolt.2D RedBolt.Actions RedBolt.CSG
+```
+
+The output contains generated WebAssembly and Android projects plus their shared build infrastructure. Native modules can be combined when one selected module owns the other native modules as dependencies; incompatible native roots are rejected.
+
 Build and deploy the grouped Release WebAssembly sample catalog to the website repository:
 
 ```sh
 ./monorepo.cs publish-samples --build
 ```
 
-The command builds one shared standard bundle plus dedicated bundles for Box2D, Jolt, and RmlUI. It copies each bundle to `RedBoltFramework.github.io/samples/`, pools identical resource packages by content hash, and rebuilds the landing-page catalog from the module selectors. Add `--build-config Debug` for a local iteration build.
+With `--build`, the command regenerates and builds the only supported monorepo host under `Samples/`. It copies that unified bundle directly to `RedBoltFramework.github.io/samples/` and rebuilds the landing-page catalog from the module catalogs. Add `--build-config Debug` for a local iteration build.
 
 ## Build and test
 
