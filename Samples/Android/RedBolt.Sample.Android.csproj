@@ -10,6 +10,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <AssemblyName>RedBolt.Samples.All.Android</AssemblyName>
     <ApplicationId>org.redbolt.samples.all</ApplicationId>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <!-- </redbolt-generated name="android-project-properties"> -->
   </PropertyGroup>
   <ItemGroup>
@@ -33,6 +34,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <ProjectReference Include="../../RedBolt.PhysicsJolt/src/RedBolt/PhysicsJolt/RedBolt.PhysicsJolt.csproj" />
     <ProjectReference Include="../../RedBolt.PhysicsJolt/src/RedBolt/PhysicsJolt.Network/RedBolt.PhysicsJolt.Network.csproj" />
     <ProjectReference Include="../../RedBolt.RmlUI/src/RedBolt/RmlUI/RedBolt.RmlUI.csproj" />
+    <ProjectReference Include="../../RedBolt.XR/src/RedBolt/XR/RedBolt.XR.csproj" />
     <Compile Include="../../RedBolt/src/RedBolt/Sample/AggregatedInput/**/*.cs" Link="Samples/RedBolt/AggregatedInput/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt/src/RedBolt/Sample/AnimatingScene/**/*.cs" Link="Samples/RedBolt/AnimatingScene/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt/src/RedBolt/Sample/Billboards/**/*.cs" Link="Samples/RedBolt/Billboards/%(RecursiveDir)%(Filename)%(Extension)" />
@@ -84,14 +86,15 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <Compile Include="../../RedBolt.PhysicsJolt/src/RedBolt/Sample/SceneReplication/**/*.cs" Link="Samples/RedBoltPhysicsJolt/SceneReplication/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.RmlUI/src/RedBolt/Sample/AdvancedUI/**/*.cs" Link="Samples/RedBoltRmlUI/AdvancedUI/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.RmlUI/src/RedBolt/Sample/HelloRmlUI/**/*.cs" Link="Samples/RedBoltRmlUI/HelloRmlUI/%(RecursiveDir)%(Filename)%(Extension)" />
-    <AndroidAsset Include="../../RedBolt.2D/bin/CoreData/**/*" Link="CoreData/%(RecursiveDir)%(Filename)%(Extension)" />
-    <AndroidAsset Include="../../RedBolt.RmlUI/bin/CoreData/**/*" Link="CoreData/%(RecursiveDir)%(Filename)%(Extension)" />
-    <AndroidAsset Include="../../RedBolt.2D/bin/Data/**/*" Link="Data/%(RecursiveDir)%(Filename)%(Extension)" />
-    <AndroidAsset Include="../../RedBolt.IK/bin/Data/**/*" Link="Data/%(RecursiveDir)%(Filename)%(Extension)" />
-    <AndroidAsset Include="../../RedBolt.RmlUI/bin/Data/**/*" Link="Data/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="../../RedBolt.XR/src/RedBolt/Sample/HelloVR/**/*.cs" Link="Samples/RedBoltXR/HelloVR/%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="../../RedBolt.2D/bin/CoreData.2D/**/*" Link="CoreData/%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="../../RedBolt.RmlUI/bin/CoreData.RmlUI/**/*" Link="CoreData/%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="../../RedBolt.2D/bin/Data.2D/**/*" Link="Data/%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="../../RedBolt.IK/bin/Data.IK/**/*" Link="Data/%(RecursiveDir)%(Filename)%(Extension)" />
+    <AndroidAsset Include="../../RedBolt.RmlUI/bin/Data.RmlUI/**/*" Link="Data/%(RecursiveDir)%(Filename)%(Extension)" />
     <RedBoltAggregateAndroidNativeProject Include="../../RedBolt.PhysicsBox2D/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
-    <RedBoltAggregateAndroidNativeProject Include="../../RedBolt.PhysicsJolt/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
     <RedBoltAggregateAndroidNativeProject Include="../../RedBolt.RmlUI/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
+    <RedBoltAggregateAndroidNativeProject Include="../../RedBolt.XR/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
     <!-- </redbolt-generated name="android-project-items"> -->
   </ItemGroup>
   <!-- <redbolt-generated name="android-project-import"> -->
@@ -101,6 +104,12 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
   <Target Name="RedBoltBuildAggregateAndroidNativeModules" BeforeTargets="RedBoltPrepareAndroidRuntime" Condition="'@(RedBoltAggregateAndroidNativeProject)' != ''">
     <MSBuild Projects="@(RedBoltAggregateAndroidNativeProject)" Targets="Restore;RedBoltPrepareAndroidRuntime" BuildInParallel="false"
              Properties="Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltParallelization=$(RedBoltParallelization);RedBoltPlatform=$(RedBoltPlatform);RuntimeIdentifier=$(RuntimeIdentifier);RedBoltBuildAllAndroidPackages=false;MSBuildEnableWorkloadResolver=false" />
+  </Target>
+  <Target Name="RedBoltCollectAdditionalAndroidSampleLibraries" BeforeTargets="_BuildApkEmbed;_BuildApkFastDev" DependsOnTargets="RedBoltPrepareAndroidRuntime">
+    <ItemGroup>
+      <AndroidNativeLibrary Include="$(RedBoltNativeOutputRoot)/libopenxr_loader.so" />
+      <AndroidNativeLibrary Include="$(RedBoltNativeOutputRoot)/libRedBolt.Native.Jolt.so" />
+    </ItemGroup>
   </Target>
   <!-- </redbolt-generated name="android-project-targets"> -->
 </Project>
