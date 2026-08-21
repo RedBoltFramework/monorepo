@@ -310,8 +310,9 @@ static class MonorepoApp
         {
             var available = LoadSampleModules(root);
             var selected = SelectSampleModules(available, options.Modules);
-            var webTemplatePath = Path.Combine(root, "RedBolt", "src", "RedBolt", "Sample", "Web", "wwwroot", "index.html");
-            var webTemplate = File.ReadAllText(webTemplatePath);
+            var templates = LoadSampleTemplates(root);
+            VerifyGeneratedRegionReplacement();
+            VerifySampleOrdering();
             var stale = false;
 
             if (options.Output is null)
@@ -320,7 +321,7 @@ static class MonorepoApp
                 {
                     var output = Path.Combine(module.Root, "src", "RedBolt", "Sample");
                     GenerateSampleHost(root, output, module.Definition.Name, [module], aggregate: false,
-                        options.Check, webTemplate, ref stale);
+                        options.Check, templates, ref stale);
                 }
             }
             else
@@ -329,7 +330,7 @@ static class MonorepoApp
                 EnsureOutputIsInWorkspace(root, output);
                 var name = options.Name ?? Path.GetFileName(output.TrimEnd(Path.DirectorySeparatorChar));
                 GenerateSampleHost(root, output, name, selected, aggregate: true,
-                    options.Check, webTemplate, ref stale);
+                    options.Check, templates, ref stale);
             }
 
             if (options.Check && stale)
@@ -345,6 +346,17 @@ static class MonorepoApp
             Console.Error.WriteLine($"Cannot generate sample hosts: {exception.Message}");
             return 1;
         }
+    }
+
+    private static SampleTemplates LoadSampleTemplates(string root)
+    {
+        var sampleRoot = Path.Combine(root, "RedBolt", "src", "RedBolt", "Sample");
+        return new SampleTemplates(
+            File.ReadAllText(Path.Combine(sampleRoot, "Web", "Program.cs")),
+            File.ReadAllText(Path.Combine(sampleRoot, "Web", "RedBolt.Sample.Web.csproj")),
+            File.ReadAllText(Path.Combine(sampleRoot, "Web", "wwwroot", "index.html")),
+            File.ReadAllText(Path.Combine(sampleRoot, "Android", "Program.cs")),
+            File.ReadAllText(Path.Combine(sampleRoot, "Android", "RedBolt.Sample.Android.csproj")));
     }
 
     private static IReadOnlyList<SampleModule> LoadSampleModules(string root)
@@ -463,7 +475,7 @@ static class MonorepoApp
         IReadOnlyList<SampleModule> modules,
         bool aggregate,
         bool check,
-        string webTemplate,
+        SampleTemplates templates,
         ref bool stale)
     {
         if (string.IsNullOrWhiteSpace(name) || name.Any(character => !char.IsLetterOrDigit(character)
@@ -478,9 +490,9 @@ static class MonorepoApp
         if (aggregate)
             GenerateAggregateInfrastructure(root, output, name, check, ref stale);
         if (webModules.Length > 0)
-            GenerateWebHost(root, output, name, webModules, nativeOwner, aggregate, check, webTemplate, ref stale);
+            GenerateWebHost(root, output, name, webModules, nativeOwner, aggregate, check, templates, ref stale);
         if (androidModules.Length > 0)
-            GenerateAndroidHost(root, output, name, androidModules, nativeOwner, aggregate, check, ref stale);
+            GenerateAndroidHost(root, output, name, androidModules, nativeOwner, aggregate, check, templates, ref stale);
 
         Console.WriteLine($"{(check ? "Checked" : "Generated")} {name}: {string.Join(", ", modules.Select(module => module.Definition.Name))}");
     }
@@ -568,22 +580,23 @@ static class MonorepoApp
         SampleModule? nativeOwner,
         bool aggregate,
         bool check,
-        string webTemplate,
+        SampleTemplates templates,
         ref bool stale)
     {
         var directory = Path.Combine(output, "Web");
         var assemblyName = aggregate ? $"RedBolt.Samples.{ToIdentifier(name)}.Web" : $"{modules[0].Definition.Name}.Sample.Web";
         const string projectName = "RedBolt.Sample.Web.csproj";
-        var project = GenerateWebProject(root, directory, name, assemblyName, modules, nativeOwner, aggregate);
-        var catalog = GenerateWebCatalog(modules);
-        var index = GenerateWebIndex(webTemplate, aggregate ? $"RedBolt {name}" : modules[0].Definition.Name, modules, aggregate);
+        var project = GenerateWebProject(templates.WebProject, root, directory, name, assemblyName, modules, nativeOwner, aggregate);
+        var program = GenerateWebProgram(templates.WebProgram, modules);
+        var index = GenerateWebIndex(templates.WebIndex, aggregate ? $"RedBolt {name}" : modules[0].Definition.Name, modules, aggregate);
 
         WriteGeneratedFile(Path.Combine(directory, projectName), project, check, ref stale);
-        WriteGeneratedFile(Path.Combine(directory, "Program.cs"), catalog, check, ref stale);
+        WriteGeneratedFile(Path.Combine(directory, "Program.cs"), program, check, ref stale);
         WriteGeneratedFile(Path.Combine(directory, "wwwroot", "index.html"), index, check, ref stale);
     }
 
     private static string GenerateWebProject(
+        string template,
         string root,
         string projectDirectory,
         string name,
@@ -592,34 +605,31 @@ static class MonorepoApp
         SampleModule? nativeOwner,
         bool aggregate)
     {
-        var builder = new StringBuilder();
-        builder.AppendLine("<!-- Generated by ./monorepo.cs generate-samples. -->");
-        builder.AppendLine("<Project Sdk=\"Microsoft.NET.Sdk.WebAssembly\">");
-        builder.AppendLine("  <PropertyGroup>");
-        builder.AppendLine($"    <AssemblyName>{Xml(assemblyName)}</AssemblyName>");
-        builder.AppendLine("    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>");
+        var properties = new StringBuilder();
+        properties.AppendLine($"    <AssemblyName>{Xml(assemblyName)}</AssemblyName>");
+        properties.AppendLine("    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>");
         if (aggregate)
         {
-            builder.AppendLine($"    <RedBoltWebOutputDir>$(RedBoltExpectedBuildRoot)/bin/$(Configuration)/browser-wasm/web/{Xml(name)}</RedBoltWebOutputDir>");
+            properties.AppendLine($"    <RedBoltWebOutputDir>$(RedBoltExpectedBuildRoot)/bin/$(Configuration)/browser-wasm/web/{Xml(name)}</RedBoltWebOutputDir>");
         }
         if (nativeOwner?.Definition.WebNative == true)
-            builder.AppendLine($"    <RedBoltExternalWebArchive>$(RedBoltNativeBuildDir)/lib/Release/wasm/{Xml(nativeOwner.Definition.Name)}.Native.Web.a</RedBoltExternalWebArchive>");
+            properties.AppendLine($"    <RedBoltExternalWebArchive>$(RedBoltNativeBuildDir)/lib/Release/wasm/{Xml(nativeOwner.Definition.Name)}.Native.Web.a</RedBoltExternalWebArchive>");
 
         var pinvokeModules = modules.SelectMany(module => module.Definition.WebPInvokeModules)
             .Distinct(StringComparer.Ordinal).ToArray();
         if (pinvokeModules.Length > 0)
-            builder.AppendLine($"    <RedBoltExternalWebPInvokeModules>{Xml(string.Join(';', pinvokeModules))}</RedBoltExternalWebPInvokeModules>");
+            properties.AppendLine($"    <RedBoltExternalWebPInvokeModules>{Xml(string.Join(';', pinvokeModules))}</RedBoltExternalWebPInvokeModules>");
         var extensions = modules.Where(module => module.Definition.WebExtension is not null)
             .Select(module => Path.GetFullPath(module.Definition.WebExtension!, module.Root))
             .Distinct(StringComparer.Ordinal).ToArray();
         if (extensions.Length > 1)
             throw new InvalidDataException($"Selected modules require different web extension scripts: {string.Join(", ", extensions)}");
         if (extensions.Length == 1)
-            builder.AppendLine($"    <RedBoltWebExtensionScript>{Xml(RelativeProjectPath(projectDirectory, extensions[0]))}</RedBoltWebExtensionScript>");
-        builder.AppendLine("  </PropertyGroup>");
-        builder.AppendLine("  <ItemGroup>");
-        builder.AppendLine("    <Compile Include=\"Program.cs\" />");
-        AppendProjectItems(builder, projectDirectory, modules, web: true);
+            properties.AppendLine($"    <RedBoltWebExtensionScript>{Xml(RelativeProjectPath(projectDirectory, extensions[0]))}</RedBoltWebExtensionScript>");
+
+        var items = new StringBuilder();
+        items.AppendLine("    <Compile Include=\"Program.cs\" />");
+        AppendProjectItems(items, projectDirectory, modules, web: true);
         if (aggregate)
         {
             foreach (var module in FindNativeOwners(modules).Where(module => module.Definition.WebNative))
@@ -627,22 +637,29 @@ static class MonorepoApp
                 var sampleProject = Path.Combine(module.Root, "src", "RedBolt", "Sample", "Web", "RedBolt.Sample.Web.csproj");
                 var bindingProjects = Path.Combine(module.Root, "src", "RedBolt", "Native", "**", "*.csproj");
                 var archive = $"$(RedBoltBuildRoot)/native/{module.Definition.Name}/browser-wasm/lib/Release/wasm/{module.Definition.Name}.Native.Web.a";
-                builder.AppendLine($"    <RedBoltAggregateWebNativeProject Include=\"{Xml(RelativeProjectPath(projectDirectory, sampleProject))}\" />");
-                builder.AppendLine($"    <ProjectReference Include=\"{Xml(RelativeProjectPath(projectDirectory, bindingProjects))}\" />");
-                builder.AppendLine($"    <NativeFileReference Include=\"{Xml(archive)}\" />");
+                items.AppendLine($"    <RedBoltAggregateWebNativeProject Include=\"{Xml(RelativeProjectPath(projectDirectory, sampleProject))}\" />");
+                items.AppendLine($"    <ProjectReference Include=\"{Xml(RelativeProjectPath(projectDirectory, bindingProjects))}\" />");
+                items.AppendLine($"    <NativeFileReference Include=\"{Xml(archive)}\" />");
             }
         }
-        builder.AppendLine("  </ItemGroup>");
-        builder.AppendLine($"  <Import Project=\"{Xml(RelativeProjectPath(projectDirectory, Path.Combine(root, "RedBolt", "eng", "RedBolt.ModuleBuild", "WebSample.targets")))}\" />");
+
+        var import = $"  <Import Project=\"{Xml(RelativeProjectPath(projectDirectory, Path.Combine(root, "RedBolt", "eng", "RedBolt.ModuleBuild", "WebSample.targets")))}\" />";
+        var targets = new StringBuilder();
         if (aggregate)
         {
-            builder.AppendLine("  <Target Name=\"RedBoltBuildAggregateWebNativeArchives\" BeforeTargets=\"ResolveReferences\" Condition=\"'@(RedBoltAggregateWebNativeProject)' != ''\">");
-            builder.AppendLine("    <MSBuild Projects=\"@(RedBoltAggregateWebNativeProject)\" Targets=\"Restore;RedBoltBuildWebNativeArchive\" BuildInParallel=\"false\"");
-            builder.AppendLine("             Properties=\"Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltParallelization=$(RedBoltParallelization);RedBoltPlatform=browser-wasm;RuntimeIdentifier=browser-wasm;MSBuildEnableWorkloadResolver=false\" />");
-            builder.AppendLine("  </Target>");
+            targets.AppendLine("  <Target Name=\"RedBoltBuildAggregateWebNativeArchives\" BeforeTargets=\"ResolveReferences\" Condition=\"'@(RedBoltAggregateWebNativeProject)' != ''\">");
+            targets.AppendLine("    <MSBuild Projects=\"@(RedBoltAggregateWebNativeProject)\" Targets=\"Restore;RedBoltBuildWebNativeArchive\" BuildInParallel=\"false\"");
+            targets.AppendLine("             Properties=\"Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltParallelization=$(RedBoltParallelization);RedBoltPlatform=browser-wasm;RuntimeIdentifier=browser-wasm;MSBuildEnableWorkloadResolver=false\" />");
+            targets.AppendLine("  </Target>");
         }
-        builder.AppendLine("</Project>");
-        return builder.ToString();
+
+        return ReplaceGeneratedRegion(
+            ReplaceGeneratedRegion(
+                ReplaceGeneratedRegion(
+                    ReplaceGeneratedRegion(template, "web-project-properties", properties.ToString(), GeneratedComment.Xml),
+                    "web-project-items", items.ToString(), GeneratedComment.Xml),
+                "web-project-import", import, GeneratedComment.Xml),
+            "web-project-targets", targets.ToString(), GeneratedComment.Xml);
     }
 
     private static void GenerateAndroidHost(
@@ -653,6 +670,7 @@ static class MonorepoApp
         SampleModule? nativeOwner,
         bool aggregate,
         bool check,
+        SampleTemplates templates,
         ref bool stale)
     {
         var directory = Path.Combine(output, "Android");
@@ -667,16 +685,17 @@ static class MonorepoApp
         if (manifests.Length > 1)
             throw new InvalidDataException($"Selected modules require different Android manifests: {string.Join(", ", manifests)}");
 
-        var project = GenerateAndroidProject(root, directory, assemblyName, applicationId, modules, nativeOwner,
+        var project = GenerateAndroidProject(templates.AndroidProject, root, directory, assemblyName, applicationId, modules, nativeOwner,
             customManifest: manifests.Length == 1);
-        var catalog = GenerateAndroidCatalog(modules, aggregate);
+        var program = GenerateAndroidProgram(templates.AndroidProgram, modules, aggregate);
         WriteGeneratedFile(Path.Combine(directory, projectName), project, check, ref stale);
-        WriteGeneratedFile(Path.Combine(directory, "Program.cs"), catalog, check, ref stale);
+        WriteGeneratedFile(Path.Combine(directory, "Program.cs"), program, check, ref stale);
         if (manifests.Length == 1)
             WriteGeneratedFile(Path.Combine(directory, "AndroidManifest.xml"), File.ReadAllText(manifests[0]), check, ref stale);
     }
 
     private static string GenerateAndroidProject(
+        string template,
         string root,
         string projectDirectory,
         string assemblyName,
@@ -685,53 +704,57 @@ static class MonorepoApp
         SampleModule? nativeOwner,
         bool customManifest)
     {
-        var builder = new StringBuilder();
-        builder.AppendLine("<!-- Generated by ./monorepo.cs generate-samples. -->");
-        builder.AppendLine("<Project Sdk=\"Microsoft.NET.Sdk\">");
-        builder.AppendLine("  <PropertyGroup>");
-        builder.AppendLine($"    <AssemblyName>{Xml(assemblyName)}</AssemblyName>");
-        builder.AppendLine($"    <ApplicationId>{Xml(applicationId)}</ApplicationId>");
-        builder.AppendLine("    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>");
+        var properties = new StringBuilder();
+        properties.AppendLine($"    <AssemblyName>{Xml(assemblyName)}</AssemblyName>");
+        properties.AppendLine($"    <ApplicationId>{Xml(applicationId)}</ApplicationId>");
+        properties.AppendLine("    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>");
         if (nativeOwner is not null)
-            builder.AppendLine("    <RedBoltExternalAndroidNativeOutput>$(RedBoltNativeOutputRoot)</RedBoltExternalAndroidNativeOutput>");
+            properties.AppendLine("    <RedBoltExternalAndroidNativeOutput>$(RedBoltNativeOutputRoot)</RedBoltExternalAndroidNativeOutput>");
         if (customManifest)
-            builder.AppendLine("    <AndroidManifest>AndroidManifest.xml</AndroidManifest>");
-        builder.AppendLine("  </PropertyGroup>");
-        builder.AppendLine("  <ItemGroup>");
-        builder.AppendLine("    <Compile Include=\"Program.cs\" />");
-        AppendProjectItems(builder, projectDirectory, modules, web: false);
+            properties.AppendLine("    <AndroidManifest>AndroidManifest.xml</AndroidManifest>");
+
+        var items = new StringBuilder();
+        items.AppendLine("    <Compile Include=\"Program.cs\" />");
+        AppendProjectItems(items, projectDirectory, modules, web: false);
         if (nativeOwner is null)
         {
             foreach (var module in FindNativeOwners(modules))
             {
                 var sampleProject = Path.Combine(module.Root, "src", "RedBolt", "Sample", "Android", "RedBolt.Sample.Android.csproj");
-                builder.AppendLine($"    <RedBoltAggregateAndroidNativeProject Include=\"{Xml(RelativeProjectPath(projectDirectory, sampleProject))}\" />");
+                items.AppendLine($"    <RedBoltAggregateAndroidNativeProject Include=\"{Xml(RelativeProjectPath(projectDirectory, sampleProject))}\" />");
             }
         }
-        builder.AppendLine("  </ItemGroup>");
-        builder.AppendLine($"  <Import Project=\"{Xml(RelativeProjectPath(projectDirectory, Path.Combine(root, "RedBolt", "eng", "RedBolt.ModuleBuild", "AndroidSample.targets")))}\" />");
+
+        var import = $"  <Import Project=\"{Xml(RelativeProjectPath(projectDirectory, Path.Combine(root, "RedBolt", "eng", "RedBolt.ModuleBuild", "AndroidSample.targets")))}\" />";
+        var targets = new StringBuilder();
 
         if (nativeOwner is null)
         {
-            builder.AppendLine("  <Target Name=\"RedBoltBuildAggregateAndroidNativeModules\" BeforeTargets=\"RedBoltPrepareAndroidRuntime\" Condition=\"'@(RedBoltAggregateAndroidNativeProject)' != ''\">");
-            builder.AppendLine("    <MSBuild Projects=\"@(RedBoltAggregateAndroidNativeProject)\" Targets=\"Restore;RedBoltPrepareAndroidRuntime\" BuildInParallel=\"false\"");
-            builder.AppendLine("             Properties=\"Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltParallelization=$(RedBoltParallelization);RedBoltPlatform=$(RedBoltPlatform);RuntimeIdentifier=$(RuntimeIdentifier);RedBoltBuildAllAndroidPackages=false;MSBuildEnableWorkloadResolver=false\" />");
-            builder.AppendLine("  </Target>");
+            targets.AppendLine("  <Target Name=\"RedBoltBuildAggregateAndroidNativeModules\" BeforeTargets=\"RedBoltPrepareAndroidRuntime\" Condition=\"'@(RedBoltAggregateAndroidNativeProject)' != ''\">");
+            targets.AppendLine("    <MSBuild Projects=\"@(RedBoltAggregateAndroidNativeProject)\" Targets=\"Restore;RedBoltPrepareAndroidRuntime\" BuildInParallel=\"false\"");
+            targets.AppendLine("             Properties=\"Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltParallelization=$(RedBoltParallelization);RedBoltPlatform=$(RedBoltPlatform);RuntimeIdentifier=$(RuntimeIdentifier);RedBoltBuildAllAndroidPackages=false;MSBuildEnableWorkloadResolver=false\" />");
+            targets.AppendLine("  </Target>");
         }
 
         var nativeLibraries = modules.SelectMany(module => module.Definition.AndroidNativeLibraries)
             .Distinct(StringComparer.Ordinal).ToArray();
         if (nativeLibraries.Length > 0)
         {
-            builder.AppendLine("  <Target Name=\"RedBoltCollectAdditionalAndroidSampleLibraries\" BeforeTargets=\"_BuildApkEmbed;_BuildApkFastDev\" DependsOnTargets=\"RedBoltPrepareAndroidRuntime\">");
-            builder.AppendLine("    <ItemGroup>");
+            targets.AppendLine("  <Target Name=\"RedBoltCollectAdditionalAndroidSampleLibraries\" BeforeTargets=\"_BuildApkEmbed;_BuildApkFastDev\" DependsOnTargets=\"RedBoltPrepareAndroidRuntime\">");
+            targets.AppendLine("    <ItemGroup>");
             foreach (var library in nativeLibraries)
-                builder.AppendLine($"      <AndroidNativeLibrary Include=\"{Xml(library)}\" />");
-            builder.AppendLine("    </ItemGroup>");
-            builder.AppendLine("  </Target>");
+                targets.AppendLine($"      <AndroidNativeLibrary Include=\"{Xml(library)}\" />");
+            targets.AppendLine("    </ItemGroup>");
+            targets.AppendLine("  </Target>");
         }
-        builder.AppendLine("</Project>");
-        return builder.ToString();
+
+        return ReplaceGeneratedRegion(
+            ReplaceGeneratedRegion(
+                ReplaceGeneratedRegion(
+                    ReplaceGeneratedRegion(template, "android-project-properties", properties.ToString(), GeneratedComment.Xml),
+                    "android-project-items", items.ToString(), GeneratedComment.Xml),
+                "android-project-import", import, GeneratedComment.Xml),
+            "android-project-targets", targets.ToString(), GeneratedComment.Xml);
     }
 
     private static void AppendProjectItems(
@@ -792,29 +815,45 @@ static class MonorepoApp
     private static bool SupportsPlatform(SampleDefinition sample, bool web) =>
         sample.Platforms.Count == 0 || sample.Platforms.Contains(web ? "web" : "android", StringComparer.OrdinalIgnoreCase);
 
-    private static string GenerateWebCatalog(IReadOnlyList<SampleModule> modules)
+    private static IEnumerable<(SampleModule Module, SampleDefinition Sample)> GetSamples(
+        IReadOnlyList<SampleModule> modules,
+        bool web) =>
+        modules.SelectMany(module => module.Definition.Samples
+                .Where(sample => SupportsPlatform(sample, web))
+                .Select(sample => (Module: module, Sample: sample)))
+            .OrderBy(entry => entry.Sample.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(entry => entry.Module.Definition.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(entry => entry.Sample.Id, StringComparer.OrdinalIgnoreCase);
+
+    private static void VerifySampleOrdering()
     {
-        var builder = new StringBuilder();
-        builder.AppendLine("// Generated by ./monorepo.cs generate-samples.");
-        builder.AppendLine();
-        builder.AppendLine("namespace RedBolt.Sample.Web;");
-        builder.AppendLine();
-        builder.AppendLine("using RedBolt.Engine;");
-        builder.AppendLine();
-        builder.AppendLine("internal static class SampleCatalog");
-        builder.AppendLine("{");
+        var definition = new SampleModuleDefinition
+        {
+            Name = "Ordering",
+            Samples =
+            [
+                new SampleDefinition { Id = "zulu", Name = "Zulu" },
+                new SampleDefinition { Id = "alpha", Name = "alpha" },
+            ],
+        };
+        var module = new SampleModule("", "", definition);
+        var names = GetSamples([module], web: true).Select(entry => entry.Sample.Name).ToArray();
+        if (!names.SequenceEqual(["alpha", "Zulu"], StringComparer.Ordinal))
+            throw new InvalidDataException("Sample ordering regression detected.");
+    }
+
+    private static string GenerateWebProgram(string template, IReadOnlyList<SampleModule> modules)
+    {
         var resourcePaths = new[] { "RedBolt.CoreData", "RedBolt.Data" }
             .Concat(GetWebResourcePackages(modules).Select(package => package.Name));
-        builder.AppendLine($"    internal const string ResourcePaths = \"{CSharp(string.Join(';', resourcePaths))}\";");
-        builder.AppendLine();
-        builder.AppendLine("    internal static Application Create(string applicationTypeName) => applicationTypeName switch");
-        builder.AppendLine("    {");
-        foreach (var sample in modules.SelectMany(module => module.Definition.Samples).Where(sample => SupportsPlatform(sample, web: true)))
-            builder.AppendLine($"        \"{CSharp(sample.ApplicationType)}\" => new global::{sample.ApplicationType}(),");
-        builder.AppendLine("        _ => throw new System.InvalidOperationException($\"Unknown RedBolt sample application: {applicationTypeName}\"),");
-        builder.AppendLine("    };");
-        builder.AppendLine("}");
-        return builder.ToString();
+        var resourcePath = $"    internal const string ResourcePaths = \"{CSharp(string.Join(';', resourcePaths))}\";";
+        var factory = new StringBuilder();
+        foreach (var (_, sample) in GetSamples(modules, web: true))
+            factory.AppendLine($"        \"{CSharp(sample.ApplicationType)}\" => new global::{sample.ApplicationType}(),");
+
+        return ReplaceGeneratedRegion(
+            ReplaceGeneratedRegion(template, "web-resource-paths", resourcePath, GeneratedComment.CSharp),
+            "web-sample-factory", factory.ToString(), GeneratedComment.CSharp);
     }
 
     private static IReadOnlyList<WebResourcePackage> GetWebResourcePackages(IReadOnlyList<SampleModule> modules)
@@ -855,29 +894,16 @@ static class MonorepoApp
         }
     }
 
-    private static string GenerateAndroidCatalog(IReadOnlyList<SampleModule> modules, bool aggregate)
+    private static string GenerateAndroidProgram(string template, IReadOnlyList<SampleModule> modules, bool aggregate)
     {
-        var builder = new StringBuilder();
-        builder.AppendLine("// Generated by ./monorepo.cs generate-samples.");
-        builder.AppendLine();
-        builder.AppendLine("namespace RedBolt.Sample.Android;");
-        builder.AppendLine();
-        builder.AppendLine("internal static class SampleCatalog");
-        builder.AppendLine("{");
-        builder.AppendLine("    internal static readonly SampleEntry[] Entries =");
-        builder.AppendLine("    [");
-        foreach (var module in modules)
+        var entries = new StringBuilder();
+        foreach (var (module, sample) in GetSamples(modules, web: false))
         {
             var slug = GetModuleSlug(module.Definition.Name);
-            foreach (var sample in module.Definition.Samples.Where(sample => SupportsPlatform(sample, web: false)))
-            {
-                var id = aggregate ? $"{slug}:{sample.Id}" : sample.Id;
-                builder.AppendLine($"        new(\"{CSharp(id)}\", \"{CSharp(sample.Name)}\", static () => new global::{sample.ApplicationType}()),");
-            }
+            var id = aggregate ? $"{slug}:{sample.Id}" : sample.Id;
+            entries.AppendLine($"        new(\"{CSharp(id)}\", \"{CSharp(sample.Name)}\", static () => new global::{sample.ApplicationType}()),");
         }
-        builder.AppendLine("    ];");
-        builder.AppendLine("}");
-        return builder.ToString();
+        return ReplaceGeneratedRegion(template, "android-sample-entries", entries.ToString(), GeneratedComment.CSharp);
     }
 
     private static string GenerateWebIndex(
@@ -886,22 +912,57 @@ static class MonorepoApp
         IReadOnlyList<SampleModule> modules,
         bool aggregate)
     {
-        var html = Regex.Replace(template, "<title>.*?</title>", $"<title>{WebUtility.HtmlEncode(title)} samples</title>",
-            RegexOptions.IgnoreCase | RegexOptions.Singleline);
-        html = Regex.Replace(html, "<h1>.*?</h1>", $"<h1>{WebUtility.HtmlEncode(title)} samples</h1>",
-            RegexOptions.IgnoreCase | RegexOptions.Singleline);
-        var options = string.Join(Environment.NewLine, modules.SelectMany(module =>
+        var html = ReplaceGeneratedRegion(template, "web-title",
+            $"  <title>{WebUtility.HtmlEncode(title)} samples</title>", GeneratedComment.Xml);
+        html = ReplaceGeneratedRegion(html, "web-heading",
+            $"      <h1>{WebUtility.HtmlEncode(title)} samples</h1>", GeneratedComment.Xml);
+        var options = string.Join(Environment.NewLine, GetSamples(modules, web: true).Select(entry =>
         {
-            var slug = GetModuleSlug(module.Definition.Name);
-            return module.Definition.Samples.Where(sample => SupportsPlatform(sample, web: true)).Select(sample =>
-            {
-                var id = aggregate ? $"{slug}:{sample.Id}" : sample.Id;
-                return $"        <option value=\"{WebUtility.HtmlEncode(id)}\" data-application=\"{WebUtility.HtmlEncode(sample.ApplicationType)}\">{WebUtility.HtmlEncode(sample.Name)}</option>";
-            });
+            var slug = GetModuleSlug(entry.Module.Definition.Name);
+            var id = aggregate ? $"{slug}:{entry.Sample.Id}" : entry.Sample.Id;
+            return $"        <option value=\"{WebUtility.HtmlEncode(id)}\" data-application=\"{WebUtility.HtmlEncode(entry.Sample.ApplicationType)}\">{WebUtility.HtmlEncode(entry.Sample.Name)}</option>";
         }));
-        var selector = $"<select id=\"sample\" aria-label=\"Sample\">{Environment.NewLine}{options}{Environment.NewLine}      </select>";
-        return Regex.Replace(html, "<select\\s+id=\"sample\"[^>]*>.*?</select>", selector,
-            RegexOptions.IgnoreCase | RegexOptions.Singleline);
+        return ReplaceGeneratedRegion(html, "web-sample-options", options, GeneratedComment.Xml);
+    }
+
+    private static string ReplaceGeneratedRegion(
+        string template,
+        string name,
+        string content,
+        GeneratedComment comment)
+    {
+        var startMarker = comment == GeneratedComment.CSharp
+            ? $"// <redbolt-generated name=\"{name}\">"
+            : $"<!-- <redbolt-generated name=\"{name}\"> -->";
+        var endMarker = comment == GeneratedComment.CSharp
+            ? $"// </redbolt-generated name=\"{name}\">"
+            : $"<!-- </redbolt-generated name=\"{name}\"> -->";
+        var normalized = template.Replace("\r\n", "\n");
+        var start = normalized.IndexOf(startMarker, StringComparison.Ordinal);
+        if (start < 0 || start != normalized.LastIndexOf(startMarker, StringComparison.Ordinal))
+            throw new InvalidDataException($"Template must contain one generated region named '{name}'.");
+
+        var contentStart = normalized.IndexOf('\n', start + startMarker.Length);
+        if (contentStart < 0)
+            throw new InvalidDataException($"Generated region '{name}' has no content line.");
+        contentStart++;
+        var end = normalized.IndexOf(endMarker, contentStart, StringComparison.Ordinal);
+        if (end < 0 || end != normalized.LastIndexOf(endMarker, StringComparison.Ordinal))
+            throw new InvalidDataException($"Generated region '{name}' must contain one closing marker.");
+        var endLineStart = normalized.LastIndexOf('\n', end) + 1;
+
+        var replacement = content.Replace("\r\n", "\n").TrimEnd('\n');
+        if (replacement.Length > 0)
+            replacement += "\n";
+        return normalized[..contentStart] + replacement + normalized[endLineStart..];
+    }
+
+    private static void VerifyGeneratedRegionReplacement()
+    {
+        const string fixture = "before\n// <redbolt-generated name=\"test\">\nold\n// </redbolt-generated name=\"test\">\nafter\n";
+        const string expected = "before\n// <redbolt-generated name=\"test\">\nnew\n// </redbolt-generated name=\"test\">\nafter\n";
+        if (ReplaceGeneratedRegion(fixture, "test", "new", GeneratedComment.CSharp) != expected)
+            throw new InvalidDataException("Generated region replacement did not preserve template source.");
     }
 
     private static string GetModuleSlug(string moduleName) =>
@@ -1178,6 +1239,8 @@ static class MonorepoApp
         var output = bundle is null ? null : Path.Combine(root, "build", "bin", configuration, "browser-wasm", "web", bundle.Slug, "wwwroot");
         var samples = definition?.Web == true
             ? definition.Samples.Where(sample => SupportsPlatform(sample, web: true))
+                .OrderBy(sample => sample.Name, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(sample => sample.Id, StringComparer.OrdinalIgnoreCase)
                 .Select(sample => new WebSample(sample.Id, sample.Name, sample.ApplicationType)).ToArray()
             : [];
         var available = output is not null && File.Exists(Path.Combine(output, "index.html"));
@@ -1381,7 +1444,18 @@ static class MonorepoApp
     private sealed record WebSample(string Id, string Name, string Application);
     private sealed record PublishedBundle(string OutputDirectory);
     private sealed record SampleModule(string Root, string CatalogPath, SampleModuleDefinition Definition);
+    private sealed record SampleTemplates(
+        string WebProgram,
+        string WebProject,
+        string WebIndex,
+        string AndroidProgram,
+        string AndroidProject);
     private sealed record WebResourcePackage(string Name, string Directory);
+    private enum GeneratedComment
+    {
+        CSharp,
+        Xml,
+    }
     private sealed class GenerateSamplesOptions
     {
         public List<string> Modules { get; } = [];

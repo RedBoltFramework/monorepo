@@ -47,14 +47,37 @@ Pull updates from `origin` for the monorepo, every cloned module, and every clon
 ./monorepo.cs pull feature/my-change
 ```
 
-Each module declares its web and Android catalog in `src/RedBolt/Sample/SampleCatalog.json`. Regenerate all module-local hosts, or verify that committed hosts are current, with:
+## Update samples
+
+Each module owns its sample list in `src/RedBolt/Sample/SampleCatalog.json`. To add, remove, or rename a sample, update its entry in that catalog and its source directory under `src/RedBolt/Sample/`. The important catalog fields are:
+
+- `web` and `android` enable the module host for each platform.
+- `samples` defines each sample `id`, display `name`, `applicationType`, and source directory. Generated sample lists are sorted alphabetically by display name.
+- A sample `platforms` list limits that entry to `web` or `android`; an empty or missing list enables both supported platforms.
+- `projectReferences`, `additionalSources`, and the platform-specific fields add build inputs.
+- `coreData` and `data` select data files that the generated projects package and mount at runtime.
+
+The core projects in `RedBolt/src/RedBolt/Sample/Web/` and `RedBolt/src/RedBolt/Sample/Android/` are both working core sample hosts and the templates for every generated host. Change shared host behavior there. Keep every `<redbolt-generated name="...">` marker intact and unique: the generator replaces only the marked regions, so hand-written code outside them survives a core self-update. Do not manually edit generated hosts in external modules or `Samples/`; generation replaces them from the core templates.
+
+After a catalog, sample source, data file, or core template changes, regenerate all module-local hosts:
 
 ```sh
 ./monorepo.cs generate-samples
+```
+
+Regenerate only selected module hosts during focused work:
+
+```sh
+./monorepo.cs generate-samples --modules RedBolt.RmlUI
+```
+
+Use check mode in validation to fail when committed generated hosts are stale:
+
+```sh
 ./monorepo.cs generate-samples --check
 ```
 
-Generate one compatible aggregate host by giving an output, a host name, and a module list:
+Generate a custom unified Web and Android host by giving an output, a host name, and a module list:
 
 ```sh
 ./monorepo.cs generate-samples \
@@ -62,15 +85,15 @@ Generate one compatible aggregate host by giving an output, a host name, and a m
   --modules RedBolt RedBolt.2D RedBolt.Actions RedBolt.CSG
 ```
 
-The output contains generated WebAssembly and Android projects plus their shared build infrastructure. Native modules can be combined when one selected module owns the other native modules as dependencies; incompatible native roots are rejected.
+The output contains generated WebAssembly and Android projects plus their shared build infrastructure. Native modules can be combined when one selected module owns the other native modules as dependencies; incompatible native roots are rejected. Module data remains in distinct `.pak` files and is merged through the runtime virtual file system.
 
-Build and deploy the grouped Release WebAssembly sample catalog to the website repository:
+The only supported published bundle is `PublishedSampleBundle` in `monorepo.cs`. Change its module list to change which module catalogs appear in the unified website and Android applications. Then build and deploy the unified Release WebAssembly catalog to the website repository:
 
 ```sh
 ./monorepo.cs publish-samples --build
 ```
 
-With `--build`, the command regenerates and builds the only supported monorepo host under `Samples/`. It copies that unified bundle directly to `RedBoltFramework.github.io/samples/` and rebuilds the landing-page catalog from the module catalogs. Add `--build-config Debug` for a local iteration build.
+With `--build`, the command regenerates and builds the only supported monorepo host under `Samples/`. It copies that unified bundle directly to `RedBoltFramework.github.io/samples/` and rebuilds `catalog.json` from the selected module catalogs. Release web builds use AOT. Add `--build-config Debug` for a faster local web build without AOT. Android generation does not require web deployment.
 
 ## Build and test
 
