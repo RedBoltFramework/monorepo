@@ -28,10 +28,10 @@ Module options can occur more than once and accept space-separated or comma-sepa
 
 There are two build modes:
 
-- **Monorepo mode:** from this repository root, run `dotnet build ./RedBolt.slnx`. The root solution builds the selected core and sibling leaf projects. Each project writes only to its own `<module>/build` directory. Select a platform variant with `-p:RedBoltBuildPlatform=linux-x64`, `win-x64`, `android-x64`, `android-arm64`, or `browser-wasm`.
+- **Monorepo mode:** from this repository root, run `dotnet build ./RedBolt.slnx`. The root solution builds the selected core and sibling leaf projects into this repository's shared `build/` directory. Select a platform variant with `-p:RedBoltBuildPlatform=linux-x64`, `win-x64`, `android-x64`, `android-arm64`, or `browser-wasm`.
 - **Module mode:** from `RedBolt/` or one sibling module repository, run `dotnet build ./<module>.slnx`. The module solution uses the same module-local build directory and resolves a sibling core checkout through `../RedBolt` when required.
 
-The build system marks these modes explicitly. Do not run the root and module solutions concurrently because they can share the core checkout's generated dependencies.
+Each solution `Build` or `Rebuild` records its active build root in each module checkout's local `build/BuildRoot.props`. A later direct `.csproj` build uses the root selected by that module's last solution build. Delete `BuildRoot.props` to restore the module-local default. Do not run the root and module solutions concurrently because they can share the core checkout's generated dependencies.
 
 Show command help with:
 
