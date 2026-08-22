@@ -47,6 +47,12 @@ Pull updates from `origin` for the monorepo, every cloned module, and every clon
 ./monorepo.cs pull feature/my-change
 ```
 
+Push the current branch from the monorepo and every cloned repository to its configured upstream:
+
+```sh
+./monorepo.cs push
+```
+
 ## Update samples
 
 Each module owns its sample list in `src/RedBolt/Sample/SampleCatalog.json`. To add, remove, or rename a sample, update its entry in that catalog and its source directory under `src/RedBolt/Sample/`. The important catalog fields are:

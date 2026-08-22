@@ -87,6 +87,24 @@ static class MonorepoApp
             return await PullAsync(args.Length == 2 ? args[1] : "master");
         }
 
+        if (string.Equals(args[0], "push", StringComparison.OrdinalIgnoreCase))
+        {
+            if (args.Length == 2 && args[1] is "-h" or "--help")
+            {
+                PrintPushHelp();
+                return 0;
+            }
+
+            if (args.Length > 1)
+            {
+                Console.Error.WriteLine("The push subcommand does not accept arguments.");
+                PrintPushHelp();
+                return 1;
+            }
+
+            return await PushAsync();
+        }
+
         if (string.Equals(args[0], "generate-samples", StringComparison.OrdinalIgnoreCase))
         {
             if (args.Length == 2 && args[1] is "-h" or "--help")
@@ -1077,6 +1095,34 @@ static class MonorepoApp
         return failed ? 1 : 0;
     }
 
+    private static async Task<int> PushAsync()
+    {
+        var root = GetScriptDirectory();
+        var failed = false;
+        var found = 0;
+
+        Console.WriteLine("Pushing monorepo...");
+        if (await RunGitPushAsync(root) != 0)
+            failed = true;
+
+        foreach (var repository in Repositories)
+        {
+            var directory = Path.Combine(root, repository.RelativePath);
+            if (!Directory.Exists(Path.Combine(directory, ".git")) && !File.Exists(Path.Combine(directory, ".git")))
+                continue;
+
+            found++;
+            Console.WriteLine($"Pushing {repository.RelativePath}...");
+            if (await RunGitPushAsync(directory) != 0)
+                failed = true;
+        }
+
+        if (found == 0)
+            Console.WriteLine("No cloned module repositories found.");
+
+        return failed ? 1 : 0;
+    }
+
     private static bool TryParsePublishOptions(string[] args, out PublishOptions options, out string? error)
     {
         options = new PublishOptions();
@@ -1348,6 +1394,34 @@ static class MonorepoApp
         }
     }
 
+    private static async Task<int> RunGitPushAsync(string directory)
+    {
+        using var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = "git",
+                UseShellExecute = false,
+            },
+        };
+
+        process.StartInfo.ArgumentList.Add("-C");
+        process.StartInfo.ArgumentList.Add(directory);
+        process.StartInfo.ArgumentList.Add("push");
+
+        try
+        {
+            process.Start();
+            await process.WaitForExitAsync();
+            return process.ExitCode;
+        }
+        catch (Exception exception) when (exception is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            Console.Error.WriteLine($"Cannot run Git: {exception.Message}");
+            return 1;
+        }
+    }
+
     private static async Task<int> RunProcessAsync(string directory, string fileName, IReadOnlyCollection<string> arguments)
     {
         using var process = new Process
@@ -1388,6 +1462,7 @@ static class MonorepoApp
         Console.WriteLine("Subcommands:");
         Console.WriteLine("  init              Clone module repositories");
         Console.WriteLine("  pull              Pull every cloned repository with rebase");
+        Console.WriteLine("  push              Push every cloned repository");
         Console.WriteLine("  generate-samples  Generate web and Android sample hosts");
         Console.WriteLine("  publish-samples   Deploy built web samples to the website");
         Console.WriteLine();
@@ -1401,6 +1476,15 @@ static class MonorepoApp
         Console.WriteLine();
         Console.WriteLine("Pulls the specified ref from origin into every cloned repository with rebase.");
         Console.WriteLine("The default ref is master.");
+    }
+
+    private static void PrintPushHelp()
+    {
+        Console.WriteLine("Usage:");
+        Console.WriteLine("  ./monorepo.cs push");
+        Console.WriteLine();
+        Console.WriteLine("Pushes the current branch of the monorepo and every cloned repository.");
+        Console.WriteLine("Each repository uses its configured Git remote and upstream branch.");
     }
 
     private static void PrintInitHelp()
