@@ -1203,7 +1203,7 @@ static class MonorepoApp
         {
             "restore", project,
             "-p:MSBuildEnableWorkloadResolver=false",
-            "-p:RedBoltParallelization=1",
+            $"-p:RedBoltParallelization={Environment.ProcessorCount}",
             "-p:RedBoltPlatform=browser-wasm",
             "-p:RedBoltEnablePlatforms=web",
             "-p:RuntimeIdentifier=browser-wasm",
@@ -1218,8 +1218,8 @@ static class MonorepoApp
             "--configuration", options.Configuration,
             "--runtime", "browser-wasm",
             "--no-restore",
-            "-m:1",
-            "-p:RedBoltParallelization=1",
+            $"-m:{Environment.ProcessorCount}",
+            $"-p:RedBoltParallelization={Environment.ProcessorCount}",
             "-p:RedBoltPlatform=browser-wasm",
             "-p:RedBoltEnablePlatforms=web",
         };
