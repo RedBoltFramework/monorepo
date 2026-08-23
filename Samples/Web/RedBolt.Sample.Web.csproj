@@ -87,10 +87,10 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <Compile Include="../../RedBolt.RmlUI/src/RedBolt/Sample/AdvancedUI/**/*.cs" Link="Samples/RedBoltRmlUI/AdvancedUI/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.RmlUI/src/RedBolt/Sample/HelloRmlUI/**/*.cs" Link="Samples/RedBoltRmlUI/HelloRmlUI/%(RecursiveDir)%(Filename)%(Extension)" />
     <RedBoltWebResourcePackage Include="RedBolt.2D.CoreData" SourceDirectory="../../RedBolt.2D/bin/CoreData.2D" />
-    <RedBoltWebResourcePackage Include="RedBolt.2D.Data" SourceDirectory="../../RedBolt.2D/bin/Data.2D" />
-    <RedBoltWebResourcePackage Include="RedBolt.IK.Data" SourceDirectory="../../RedBolt.IK/bin/Data.IK" />
+    <RedBoltWebResourcePackage Include="RedBolt.2D.SampleData" SourceDirectory="../../RedBolt.2D/bin/SampleData.2D" />
+    <RedBoltWebResourcePackage Include="RedBolt.IK.SampleData" SourceDirectory="../../RedBolt.IK/bin/SampleData.IK" />
     <RedBoltWebResourcePackage Include="RedBolt.RmlUI.CoreData" SourceDirectory="../../RedBolt.RmlUI/bin/CoreData.RmlUI" />
-    <RedBoltWebResourcePackage Include="RedBolt.RmlUI.Data" SourceDirectory="../../RedBolt.RmlUI/bin/Data.RmlUI" />
+    <RedBoltWebResourcePackage Include="RedBolt.RmlUI.SampleData" SourceDirectory="../../RedBolt.RmlUI/bin/SampleData.RmlUI" />
     <TrimmerRootAssembly Include="RedBolt.Network" />
     <TrimmerRootAssembly Include="RedBolt.RmlUI" />
     <TrimmerRootAssembly Include="RedBolt.Bindings.RmlUi" />

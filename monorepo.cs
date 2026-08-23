@@ -824,9 +824,9 @@ static class MonorepoApp
             foreach (var resource in modules.SelectMany(module => module.Definition.CoreData
                          .Select(path => Path.GetFullPath(path, module.Root))).Distinct(StringComparer.Ordinal))
                 builder.AppendLine($"    <AndroidAsset Include=\"{Xml(RelativeProjectPath(projectDirectory, resource))}\" Link=\"CoreData/%(RecursiveDir)%(Filename)%(Extension)\" />");
-            foreach (var resource in modules.SelectMany(module => module.Definition.Data
+            foreach (var resource in modules.SelectMany(module => module.Definition.SampleData
                          .Select(path => Path.GetFullPath(path, module.Root))).Distinct(StringComparer.Ordinal))
-                builder.AppendLine($"    <AndroidAsset Include=\"{Xml(RelativeProjectPath(projectDirectory, resource))}\" Link=\"Data/%(RecursiveDir)%(Filename)%(Extension)\" />");
+                builder.AppendLine($"    <AndroidAsset Include=\"{Xml(RelativeProjectPath(projectDirectory, resource))}\" Link=\"SampleData/%(RecursiveDir)%(Filename)%(Extension)\" />");
         }
     }
 
@@ -862,7 +862,7 @@ static class MonorepoApp
 
     private static string GenerateWebProgram(string template, IReadOnlyList<SampleModule> modules)
     {
-        var resourcePaths = new[] { "RedBolt.CoreData", "RedBolt.Data" }
+        var resourcePaths = new[] { "RedBolt.CoreData", "RedBolt.SampleData" }
             .Concat(GetWebResourcePackages(modules).Select(package => package.Name));
         var resourcePath = $"    internal const string ResourcePaths = \"{CSharp(string.Join(';', resourcePaths))}\";";
         var factory = new StringBuilder();
@@ -882,7 +882,7 @@ static class MonorepoApp
         {
             var packageName = module.Definition.ResourcePackageName ?? module.Definition.Name;
             AddWebResourcePackages(packages, module, module.Definition.CoreData, $"{packageName}.CoreData");
-            AddWebResourcePackages(packages, module, module.Definition.Data, $"{packageName}.Data");
+            AddWebResourcePackages(packages, module, module.Definition.SampleData, $"{packageName}.SampleData");
         }
 
         return packages.Select(package => new WebResourcePackage(package.Key, package.Value)).ToArray();
@@ -1560,7 +1560,7 @@ static class MonorepoApp
         public List<string> PlatformIndependentProjectReferences { get; set; } = [];
         public List<string> AdditionalSources { get; set; } = [];
         public List<string> CoreData { get; set; } = [];
-        public List<string> Data { get; set; } = [];
+        public List<string> SampleData { get; set; } = [];
         public string? ResourcePackageName { get; set; }
         public List<string> WebPInvokeModules { get; set; } = [];
         public List<string> TrimmerRootAssemblies { get; set; } = [];
