@@ -667,7 +667,7 @@ static class MonorepoApp
         {
             targets.AppendLine("  <Target Name=\"RedBoltBuildAggregateWebNativeArchives\" BeforeTargets=\"ResolveReferences\" Condition=\"'@(RedBoltAggregateWebNativeProject)' != ''\">");
             targets.AppendLine("    <MSBuild Projects=\"@(RedBoltAggregateWebNativeProject)\" Targets=\"Restore;RedBoltBuildWebNativeArchive\" BuildInParallel=\"false\"");
-            targets.AppendLine("             Properties=\"Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltParallelization=$(RedBoltParallelization);RedBoltPlatform=browser-wasm;RuntimeIdentifier=browser-wasm;MSBuildEnableWorkloadResolver=false\" />");
+            targets.AppendLine("             Properties=\"Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltPlatform=browser-wasm;RuntimeIdentifier=browser-wasm;MSBuildEnableWorkloadResolver=false\" />");
             targets.AppendLine("  </Target>");
         }
 
@@ -750,7 +750,7 @@ static class MonorepoApp
         {
             targets.AppendLine("  <Target Name=\"RedBoltBuildAggregateAndroidNativeModules\" BeforeTargets=\"RedBoltPrepareAndroidRuntime\" Condition=\"'@(RedBoltAggregateAndroidNativeProject)' != ''\">");
             targets.AppendLine("    <MSBuild Projects=\"@(RedBoltAggregateAndroidNativeProject)\" Targets=\"Restore;RedBoltPrepareAndroidRuntime\" BuildInParallel=\"false\"");
-            targets.AppendLine("             Properties=\"Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltParallelization=$(RedBoltParallelization);RedBoltPlatform=$(RedBoltPlatform);RuntimeIdentifier=$(RuntimeIdentifier);RedBoltBuildAllAndroidPackages=false;MSBuildEnableWorkloadResolver=false\" />");
+            targets.AppendLine("             Properties=\"Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltPlatform=$(RedBoltPlatform);RuntimeIdentifier=$(RuntimeIdentifier);RedBoltBuildAllAndroidPackages=false;MSBuildEnableWorkloadResolver=false\" />");
             targets.AppendLine("  </Target>");
         }
 
@@ -1249,7 +1249,7 @@ static class MonorepoApp
         {
             "restore", project,
             "-p:MSBuildEnableWorkloadResolver=false",
-            $"-p:RedBoltParallelization={Environment.ProcessorCount}",
+            $"-m:{Environment.ProcessorCount}",
             "-p:RedBoltPlatform=browser-wasm",
             "-p:RedBoltEnablePlatforms=web",
             "-p:RuntimeIdentifier=browser-wasm",
@@ -1265,7 +1265,6 @@ static class MonorepoApp
             "--runtime", "browser-wasm",
             "--no-restore",
             $"-m:{Environment.ProcessorCount}",
-            $"-p:RedBoltParallelization={Environment.ProcessorCount}",
             "-p:RedBoltPlatform=browser-wasm",
             "-p:RedBoltEnablePlatforms=web",
         };

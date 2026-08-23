@@ -111,7 +111,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
   <!-- <redbolt-generated name="web-project-targets"> -->
   <Target Name="RedBoltBuildAggregateWebNativeArchives" BeforeTargets="ResolveReferences" Condition="'@(RedBoltAggregateWebNativeProject)' != ''">
     <MSBuild Projects="@(RedBoltAggregateWebNativeProject)" Targets="Restore;RedBoltBuildWebNativeArchive" BuildInParallel="false"
-             Properties="Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltParallelization=$(RedBoltParallelization);RedBoltPlatform=browser-wasm;RuntimeIdentifier=browser-wasm;MSBuildEnableWorkloadResolver=false" />
+             Properties="Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltPlatform=browser-wasm;RuntimeIdentifier=browser-wasm;MSBuildEnableWorkloadResolver=false" />
   </Target>
   <!-- </redbolt-generated name="web-project-targets"> -->
 </Project>
