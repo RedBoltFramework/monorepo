@@ -35,6 +35,13 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     button { cursor: pointer; }
     #runner { display: none; width: 100vw; height: 100vh; }
     #runner.active { display: block; }
+    #runner header {
+      position: fixed;
+      z-index: 1;
+      padding: 0.6rem 0.8rem;
+      background: rgb(17 21 28 / 80%);
+    }
+    #runner a { color: #9dc8ff; }
     #canvas {
       position: absolute;
       inset: 0;
@@ -137,7 +144,10 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
       <button id="load" type="button">Load sample</button>
     </section>
     <section id="runner">
-      <span id="result" data-status="loading" hidden></span>
+      <header>
+        <a href="./">All samples</a>
+        <span id="result" data-status="loading">Loading…</span>
+      </header>
       <canvas id="canvas" tabindex="-1"></canvas>
       <div id="loading">
         <div id="status">Downloading...</div>
