@@ -17,6 +17,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <Compile Include="Program.cs" />
     <ProjectReference Include="../../RedBolt/src/RedBolt/Audio/RedBolt.Audio.csproj" />
     <ProjectReference Include="../../RedBolt/src/RedBolt/DearImGui/RedBolt.DearImGui.csproj" />
+    <ProjectReference Include="../../RedBolt/src/RedBolt/Utility/RedBolt.Utility.csproj" />
     <ProjectReference Include="../../RedBolt.2D/src/RedBolt/2D/RedBolt.2D.csproj" />
     <ProjectReference Include="../../RedBolt.Actions/src/RedBolt/Actions/RedBolt.Actions.csproj" />
     <ProjectReference Include="../../RedBolt.CSG/src/RedBolt/CSG/RedBolt.CSG.csproj" />
@@ -66,6 +67,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <Compile Include="../../RedBolt.IK/src/RedBolt/Sample/InverseKinematics/**/*.cs" Link="Samples/RedBoltIK/InverseKinematics/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.Navigation/src/RedBolt/Sample/Navigation/**/*.cs" Link="Samples/RedBoltNavigation/Navigation/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.Navigation/src/RedBolt/Sample/CrowdNavigation/**/*.cs" Link="Samples/RedBoltNavigation/CrowdNavigation/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="../../RedBolt.Navigation/src/RedBolt/Sample/RootMotionPlayback.cs" Link="Samples/RedBoltNavigation/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.Network/src/RedBolt/Sample/Chat/**/*.cs" Link="Samples/RedBoltNetwork/Chat/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.Network/src/RedBolt/Sample/HttpRequestDemo/**/*.cs" Link="Samples/RedBoltNetwork/HttpRequestDemo/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.Network/src/RedBolt/Sample/LANDiscovery/**/*.cs" Link="Samples/RedBoltNetwork/LANDiscovery/%(RecursiveDir)%(Filename)%(Extension)" />
@@ -82,6 +84,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <Compile Include="../../RedBolt.PhysicsJolt/src/RedBolt/Sample/Physics/**/*.cs" Link="Samples/RedBoltPhysicsJolt/Physics/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.PhysicsJolt/src/RedBolt/Sample/RaycastVehicle/**/*.cs" Link="Samples/RedBoltPhysicsJolt/RaycastVehicle/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.PhysicsJolt/src/RedBolt/Sample/SceneReplication/**/*.cs" Link="Samples/RedBoltPhysicsJolt/SceneReplication/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="../../RedBolt.PhysicsJolt/src/RedBolt/Sample/CharacterControls/**/*.cs" Link="Samples/RedBoltPhysicsJolt/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.RmlUI/src/RedBolt/Sample/AdvancedUI/**/*.cs" Link="Samples/RedBoltRmlUI/AdvancedUI/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.RmlUI/src/RedBolt/Sample/HelloRmlUI/**/*.cs" Link="Samples/RedBoltRmlUI/HelloRmlUI/%(RecursiveDir)%(Filename)%(Extension)" />
     <AndroidAsset Include="../../RedBolt.2D/bin/CoreData.2D/**/*" Link="CoreData/%(RecursiveDir)%(Filename)%(Extension)" />
