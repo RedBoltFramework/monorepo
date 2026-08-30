@@ -58,7 +58,7 @@ static class MonorepoApp
     ];
 
     private static readonly SampleBundle PublishedSampleBundle = new("all",
-        ["RedBolt", "RedBolt.2D", "RedBolt.Actions", "RedBolt.CSG", "RedBolt.IK", "RedBolt.Navigation", "RedBolt.Network", "RedBolt.Particles",
+        ["RedBolt", "RedBolt.2D", "RedBolt.Actions", "RedBolt.CSG", "RedBolt.Glow", "RedBolt.IK", "RedBolt.Navigation", "RedBolt.Network", "RedBolt.Particles",
             "RedBolt.PhysicsBox2D", "RedBolt.PhysicsJolt", "RedBolt.RmlUI"]);
 
     public static async Task<int> RunAsync(string[] args)

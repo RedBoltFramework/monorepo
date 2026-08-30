@@ -102,6 +102,7 @@ internal static class SampleCatalog
         new("rmlui:advanced-ui", "Advanced UI", static () => new global::RedBolt.Sample.AdvancedUI.AdvancedUIApplication()),
         new("redbolt:aggregated-input", "Aggregated Input", static () => new global::RedBolt.Sample.AggregatedInput.AggregatedInputApplication()),
         new("redbolt:animating-scene", "Animating Scene", static () => new global::RedBolt.Sample.AnimatingScene.AnimatingScene()),
+        new("glow:baked-lighting", "Baked Lighting", static () => new global::RedBolt.Sample.BakedLighting.BakedLighting()),
         new("redbolt:billboards", "Billboards", static () => new global::RedBolt.Sample.Billboards.BillboardsApplication()),
         new("redbolt:camera-operator", "Camera Operator", static () => new global::RedBolt.Sample.CameraOperator.CameraOperatorSampleApplication()),
         new("redbolt:camera-shake", "Camera Shake", static () => new global::RedBolt.Sample.CameraShake.CameraShakeApplication()),

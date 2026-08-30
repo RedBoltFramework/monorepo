@@ -75,7 +75,7 @@ internal static partial class BrowserDom
 internal static class SampleCatalog
 {
     // <redbolt-generated name="web-resource-paths">
-    internal const string ResourcePaths = "RedBolt.CoreData;RedBolt.SampleData;RedBolt.2D.CoreData;RedBolt.2D.SampleData;RedBolt.IK.SampleData;RedBolt.RmlUI.CoreData;RedBolt.RmlUI.SampleData";
+    internal const string ResourcePaths = "RedBolt.CoreData;RedBolt.SampleData;RedBolt.2D.CoreData;RedBolt.2D.SampleData;RedBolt.Glow.CoreData;RedBolt.Glow.SampleData;RedBolt.IK.SampleData;RedBolt.RmlUI.CoreData;RedBolt.RmlUI.SampleData";
     // </redbolt-generated name="web-resource-paths">
 
     internal static Application Create(string applicationTypeName) => applicationTypeName switch
@@ -86,6 +86,7 @@ internal static class SampleCatalog
         "RedBolt.Sample.AdvancedUI.AdvancedUIApplication" => new global::RedBolt.Sample.AdvancedUI.AdvancedUIApplication(),
         "RedBolt.Sample.AggregatedInput.AggregatedInputApplication" => new global::RedBolt.Sample.AggregatedInput.AggregatedInputApplication(),
         "RedBolt.Sample.AnimatingScene.AnimatingScene" => new global::RedBolt.Sample.AnimatingScene.AnimatingScene(),
+        "RedBolt.Sample.BakedLighting.BakedLighting" => new global::RedBolt.Sample.BakedLighting.BakedLighting(),
         "RedBolt.Sample.Billboards.BillboardsApplication" => new global::RedBolt.Sample.Billboards.BillboardsApplication(),
         "RedBolt.Sample.CameraOperator.CameraOperatorSampleApplication" => new global::RedBolt.Sample.CameraOperator.CameraOperatorSampleApplication(),
         "RedBolt.Sample.CameraShake.CameraShakeApplication" => new global::RedBolt.Sample.CameraShake.CameraShakeApplication(),

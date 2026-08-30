@@ -66,6 +66,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <Compile Include="../../RedBolt.2D/src/RedBolt/Sample/Urho2DStretchableSprite/**/*.cs" Link="Samples/RedBolt2D/Urho2DStretchableSprite/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.Actions/src/RedBolt/Sample/Actions/**/*.cs" Link="Samples/RedBoltActions/Actions/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.CSG/src/RedBolt/Sample/CSG/**/*.cs" Link="Samples/RedBoltCSG/CSG/%(RecursiveDir)%(Filename)%(Extension)" />
+    <Compile Include="../../RedBolt.Glow/src/RedBolt/Sample/BakedLighting/**/*.cs" Link="Samples/RedBoltGlow/BakedLighting/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.IK/src/RedBolt/Sample/InverseKinematics/**/*.cs" Link="Samples/RedBoltIK/InverseKinematics/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.Navigation/src/RedBolt/Sample/Navigation/**/*.cs" Link="Samples/RedBoltNavigation/Navigation/%(RecursiveDir)%(Filename)%(Extension)" />
     <Compile Include="../../RedBolt.Navigation/src/RedBolt/Sample/CrowdNavigation/**/*.cs" Link="Samples/RedBoltNavigation/CrowdNavigation/%(RecursiveDir)%(Filename)%(Extension)" />
@@ -91,6 +92,8 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <Compile Include="../../RedBolt.RmlUI/src/RedBolt/Sample/HelloRmlUI/**/*.cs" Link="Samples/RedBoltRmlUI/HelloRmlUI/%(RecursiveDir)%(Filename)%(Extension)" />
     <RedBoltWebResourcePackage Include="RedBolt.2D.CoreData" SourceDirectory="../../RedBolt.2D/bin/CoreData.2D" />
     <RedBoltWebResourcePackage Include="RedBolt.2D.SampleData" SourceDirectory="../../RedBolt.2D/bin/SampleData.2D" />
+    <RedBoltWebResourcePackage Include="RedBolt.Glow.CoreData" SourceDirectory="../../RedBolt.Glow/bin/CoreData.Glow" />
+    <RedBoltWebResourcePackage Include="RedBolt.Glow.SampleData" SourceDirectory="../../RedBolt.Glow/bin/SampleData.Glow" />
     <RedBoltWebResourcePackage Include="RedBolt.IK.SampleData" SourceDirectory="../../RedBolt.IK/bin/SampleData.IK" />
     <RedBoltWebResourcePackage Include="RedBolt.RmlUI.CoreData" SourceDirectory="../../RedBolt.RmlUI/bin/CoreData.RmlUI" />
     <RedBoltWebResourcePackage Include="RedBolt.RmlUI.SampleData" SourceDirectory="../../RedBolt.RmlUI/bin/SampleData.RmlUI" />
