@@ -435,16 +435,6 @@ static class MonorepoApp
                 if (platform is not ("web" or "android"))
                     throw new InvalidDataException($"Unknown sample platform '{platform}': {catalogPath}");
             }
-            if (sample.MobileMovement is not ("" or "wasd" or "arrows"))
-                throw new InvalidDataException($"Unknown mobile movement layout '{sample.MobileMovement}': {catalogPath}");
-            foreach (var control in sample.MobileControls)
-            {
-                if (string.IsNullOrWhiteSpace(control.Label) || control.Label.IndexOfAny(['|', ';']) >= 0
-                    || string.IsNullOrWhiteSpace(control.Key) && string.IsNullOrWhiteSpace(control.MouseButton))
-                {
-                    throw new InvalidDataException($"Invalid mobile control for sample '{sample.Id}': {catalogPath}");
-                }
-            }
         }
 
         foreach (var sourcePattern in definition.AdditionalSources)
@@ -948,23 +938,7 @@ static class MonorepoApp
         {
             var slug = GetModuleSlug(entry.Module.Definition.Name);
             var id = aggregate ? $"{slug}:{entry.Sample.Id}" : entry.Sample.Id;
-            var mobileHelp = string.IsNullOrWhiteSpace(entry.Sample.MobileHelp)
-                ? "Tap or drag directly in the sample."
-                : entry.Sample.MobileHelp;
-            var controls = string.Join(';', entry.Sample.MobileControls.Select(control =>
-            {
-                var hasKey = !string.IsNullOrWhiteSpace(control.Key);
-                var hasMouse = !string.IsNullOrWhiteSpace(control.MouseButton);
-                var kind = hasKey && hasMouse ? "combo" : hasKey ? "key" : "mouse";
-                var input = hasKey && hasMouse ? $"{control.Key}+{control.MouseButton}" : hasKey ? control.Key : control.MouseButton;
-                return $"{kind}|{input}|{control.Label}";
-            }));
-            var mobileAttributes = $" data-mobile-help=\"{WebUtility.HtmlEncode(mobileHelp)}\"";
-            if (!string.IsNullOrWhiteSpace(entry.Sample.MobileMovement))
-                mobileAttributes += $" data-mobile-movement=\"{WebUtility.HtmlEncode(entry.Sample.MobileMovement)}\"";
-            if (controls.Length != 0)
-                mobileAttributes += $" data-mobile-controls=\"{WebUtility.HtmlEncode(controls)}\"";
-            return $"        <option value=\"{WebUtility.HtmlEncode(id)}\" data-application=\"{WebUtility.HtmlEncode(entry.Sample.ApplicationType)}\"{mobileAttributes}>{WebUtility.HtmlEncode(entry.Sample.Name)}</option>";
+            return $"        <option value=\"{WebUtility.HtmlEncode(id)}\" data-application=\"{WebUtility.HtmlEncode(entry.Sample.ApplicationType)}\">{WebUtility.HtmlEncode(entry.Sample.Name)}</option>";
         }));
         return ReplaceGeneratedRegion(html, "web-sample-options", options, GeneratedComment.Xml);
     }
@@ -1601,15 +1575,6 @@ static class MonorepoApp
         public string ApplicationType { get; set; } = "";
         public string Source { get; set; } = "";
         public List<string> Platforms { get; set; } = [];
-        public string MobileHelp { get; set; } = "";
-        public string MobileMovement { get; set; } = "";
-        public List<MobileControlDefinition> MobileControls { get; set; } = [];
-    }
-    internal sealed class MobileControlDefinition
-    {
-        public string Label { get; set; } = "";
-        public string Key { get; set; } = "";
-        public string MouseButton { get; set; } = "";
     }
     private sealed class PublishOptions
     {
