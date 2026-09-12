@@ -1376,6 +1376,7 @@ static class MonorepoApp
         process.StartInfo.ArgumentList.Add("-C");
         process.StartInfo.ArgumentList.Add(directory);
         process.StartInfo.ArgumentList.Add("pull");
+        process.StartInfo.ArgumentList.Add("--autostash");
         process.StartInfo.ArgumentList.Add("--rebase");
         process.StartInfo.ArgumentList.Add("origin");
         process.StartInfo.ArgumentList.Add(reference);
