@@ -1,47 +1,120 @@
 # RedBolt workspace
 
-## Layout and ownership
+## Repository layout
 
-This directory contains `monorepo.cs` and the aggregate `RedBolt.slnx`. The core
-engine is in `RedBolt/`; modules and `RedBolt.Tests/` are its siblings. External
-modules require the core checkout; module solution builds are supported, but
-builds without the core are not. Use project references and existing root
-properties to locate dependencies instead of embedding absolute checkout paths.
+- `monorepo.cs` and `RedBolt.slnx` define the aggregate workspace.
+- `RedBolt/` contains the core engine.
+- Sibling directories contain modules and `RedBolt.Tests`.
+- External modules require a sibling core checkout. Resolve it through project
+  references and existing root properties; do not embed absolute paths.
 
-Keep shared MSBuild, CMake, Android, WebAssembly, script, and NuGet infrastructure
-in the core's `src/RedBolt/ExternalModule` or matching existing build directory.
-Modules retain only descriptors, sources, references, resources, sample catalogs,
-native targets, and package manifests. Preserve module-specific constraints in
-nested `AGENTS.md` files.
+## Workspace setup
 
-## Build and verification
+- Install .NET SDK 10 or newer.
+- Configure Git SSH access to the `RedBoltFramework` GitHub organization.
+- Run the executable script from any directory:
 
-Use `dotnet build RedBolt.slnx` for aggregate work, the affected module solution
-for module work, or an affected `.csproj` for narrow iteration. The core solution
-is `RedBolt/RedBolt.slnx`. Use `--no-restore` only after a matching restore.
-Preserve the saved build selection and active build root during ordinary
-iteration; do not delete or rewrite build configuration files to guess defaults.
+  ```sh
+  /path/to/monorepo/monorepo.cs init
+  ```
 
-Follow [verification guidance](doc/VERIFICATION.md) when building or testing.
-Expand checks for shared infrastructure, native bindings, packaging, and affected
-platforms. A full platform/configuration/package matrix is a release gate or an
-explicit task requirement, not a gate for every edit. Documentation-only changes
-need link, command, and consistency checks rather than engine builds.
+- Use `dotnet run /path/to/monorepo/monorepo.cs -- init` when executable script
+  files are unavailable.
+- The default selection clones all RedBolt repositories except `RedBolt.Tests`.
+- External repositories `SharpCpp` and `imgui` are disabled by default.
+- Enable optional repositories with `--with-modules`:
 
-For native-only work, discover supported presets with `cmake --list-presets`
-and `cmake --build --list-presets`, then use `cmake --build --preset <name>`.
-Normal managed builds invoke native dependencies through MSBuild. Do not run
-`ninja -C` on a guessed binary directory or assume a preset uses the active
-MSBuild output root; use the entry point that owns that configuration.
+  ```sh
+  ./monorepo.cs init --with-modules RedBolt.Tests SharpCpp imgui
+  ./monorepo.cs init --with-modules=all
+  ```
 
-## Conditional references
+- Accept module names as repeated, space-separated, or comma-separated options.
+- Use `--with-modules=all` to include tests and external repositories.
+- Keep existing Git clones. Report an error instead of overwriting a non-Git
+  directory.
 
-- [README.md](README.md): monorepo commands, sample catalogs and host generation.
-- [Local toolchains](doc/LOCAL_TOOLCHAINS.md): pinned host tools or recovery.
+## Ownership
+
+- Keep shared MSBuild, CMake, Android, WebAssembly, script, and NuGet
+  infrastructure in `RedBolt/src/RedBolt/ExternalModule` or its existing build
+  directory.
+- Keep modules limited to descriptors, sources, references, resources, sample
+  catalogs, native targets, and package manifests.
+- Use generated SharpCpp bindings for native dependencies. Do not add manual
+  native bindings or P/Invoke wrappers.
+- Use CPM for third-party source dependencies. Do not add git submodules.
+- Follow nested `AGENTS.md` files for module-specific rules.
+
+## Build and verify
+
+- Build the aggregate workspace with `dotnet build RedBolt.slnx`.
+- Build a module with its solution; use an affected `.csproj` for narrow
+  iteration.
+- Use `--no-restore` only after a matching restore.
+- Finish each build before starting another build or launching tests.
+- Preserve the saved build selection and active build root. Do not delete or
+  rewrite build configuration files to infer defaults.
+- Pass `-maxcpucount` to `dotnet build` and `--parallel` to `cmake --build`
+  without numeric limits for ordinary builds. Use a single job only for build
+  system debugging.
+- Select a platform variant with `-p:RedBoltBuildPlatform=linux-x64`,
+  `win-x64`, `android-x64`, `android-arm64`, or `browser-wasm`.
+- Each solution `Build` or `Rebuild` records its active build root in
+  `build/BuildRoot.props`. Direct `.csproj` builds use the root selected by the
+  module's last solution build. Delete `BuildRoot.props` to restore the
+  module-local default.
+- Do not run root and module solutions concurrently; they can share generated
+  dependencies.
+- Follow [verification guidance](doc/VERIFICATION.md). Expand checks for shared
+  infrastructure, native bindings, packaging, and affected platforms.
+- For impact-based check selection, focused test harnesses, staged resources,
+  native diagnostics, or SharpCpp E2E checks, read
+  [`.agent/skills/redbolt-verification/SKILL.md`](.agent/skills/redbolt-verification/SKILL.md).
+- Run the full platform, configuration, and package matrix for release
+  validation or an explicit task requirement. For documentation-only changes,
+  run link, command, and consistency checks instead of engine builds.
+- For native-only work, list supported presets with `cmake --list-presets` and
+  `cmake --build --list-presets`, then build with
+  `cmake --build --preset <name>`.
+- Let MSBuild invoke native dependencies for managed builds. Do not run
+  `ninja -C` against a guessed binary directory or assume a preset uses the
+  active MSBuild output root; use the owning build entry point.
+- Use the aggregate solution as the canonical build and test entry point:
+
+  ```sh
+  dotnet build RedBolt.slnx --configuration Debug -maxcpucount
+  dotnet test RedBolt.slnx --configuration Debug --no-build --no-restore
+  ```
+
+- Keep standalone module `.slnx` files usable for independent builds.
+- Use RedBolt's default CPM-managed SharpCpp and imgui checkouts for builds.
+  Treat top-level `extern/SharpCpp` and `extern/imgui` clones as developer-only
+  checkouts.
+
+## Repository commands
+
+- Show command help with:
+
+  ```sh
+  ./monorepo.cs --help
+  ./monorepo.cs init --help
+  ```
+
+- Rebase the monorepo, cloned modules, and cloned developer externals onto their
+  `origin` branches with `./monorepo.cs pull [ref]`. The default ref is
+  `master`.
+- Push the current branch to each configured upstream with
+  `./monorepo.cs push`.
+
+- For sample catalogs, host templates, generation, and publishing, read
+  [`.agent/skills/redbolt-samples/SKILL.md`](.agent/skills/redbolt-samples/SKILL.md).
+
+## References
+
+- [README.md](README.md): public overview and quick-start commands.
+- [Local toolchains](doc/LOCAL_TOOLCHAINS.md): pinned host tools and recovery.
 - [Core build requirements](RedBolt/doc/BUILD_REQUIREMENTS.md): platform setup
-  and build selection semantics.
-
-For sample catalog or shared host changes, use `./monorepo.cs generate-samples`
-with the relevant `--modules` selection, then its `--check` mode. For requested
-local Web catalog staging, `./monorepo.cs publish-samples --build --build-config Debug` prepares the website files; use Release for release preparation. Local
-staging is distinct from a Git push or remote deployment. Use `./monorepo.cs --help` to discover commands and options rather than reconstructing paths.
+  and build selection.
+- For direct C++ to C# ports, read
+  [`.agent/skills/redbolt-porting/SKILL.md`](.agent/skills/redbolt-porting/SKILL.md).

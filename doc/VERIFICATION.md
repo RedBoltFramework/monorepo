@@ -4,8 +4,10 @@ Commands below run from the monorepo root unless a different working directory
 is stated. Resolve it from the checkout containing `monorepo.cs`; do not assume
 an absolute path. Finish one build before starting another or launching tests.
 The workspace concurrency and host-cache constraints apply to all commands.
-Set `-maxcpucount:1` on `dotnet build` for one job, or up to four only after
-checking emulator/QEMU processes; pass the same limit to native build tools.
+For ordinary builds, pass `-maxcpucount` to `dotnet build` and `--parallel` to
+`cmake --build` without a numeric limit so each tool uses its default
+available-core parallelism. Use a single job only while debugging the build
+system.
 
 ## Select checks by impact
 
@@ -35,9 +37,9 @@ and unavailable checks without silently changing their expectations.
 
 ```sh
 # Aggregate build using the saved selection.
-dotnet build RedBolt.slnx --configuration Debug
+dotnet build RedBolt.slnx --configuration Debug -maxcpucount
 # Core-only build using its saved selection.
-dotnet build RedBolt/RedBolt.slnx --configuration Debug
+dotnet build RedBolt/RedBolt.slnx --configuration Debug -maxcpucount
 ```
 
 For a deliberately selected Linux x64 aggregate build, use the existing
@@ -48,7 +50,8 @@ selection persistence. Build test prerequisites before using
 From the test repository:
 
 ```sh
-dotnet build RedBolt.Tests.csproj --configuration Debug --no-restore   -p:RedBoltKeepParentRuntimeAssemblies=true -p:BuildProjectReferences=false
+dotnet build RedBolt.Tests.csproj --configuration Debug --no-restore -maxcpucount \
+  -p:RedBoltKeepParentRuntimeAssemblies=true -p:BuildProjectReferences=false
 ```
 
 Use `dotnet run --project <sample-project> --configuration Debug --no-build -- <sample-arguments>` when the project supports running. If a tool needs an output
@@ -65,7 +68,7 @@ repository's existing configure and build presets, for example:
 cmake --list-presets
 cmake --build --list-presets
 # From the core repository, after its matching configure:
-cmake --build --preset linux-x64-debug --parallel 1
+cmake --build --preset linux-x64-debug --parallel
 ```
 
 The preset's binary tree may differ from MSBuild's selected build root. Normal
