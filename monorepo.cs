@@ -654,7 +654,7 @@ static class MonorepoApp
             {
                 var sampleProject = Path.Combine(module.Root, "src", "RedBolt", "Sample", "Web", "RedBolt.Sample.Web.csproj");
                 var bindingProjects = Path.Combine(module.Root, "src", "RedBolt", "Native", "**", "*.csproj");
-                var archive = $"$(RedBoltBuildRoot)/native/{module.Definition.Name}/browser-wasm/lib/Release/wasm/{module.Definition.Name}.Native.Web.a";
+                var archive = $"$(RedBoltBuildRoot)/native/{module.Definition.Name}/browser-wasm/$(Configuration)/lib/Release/wasm/{module.Definition.Name}.Native.Web.a";
                 items.AppendLine($"    <RedBoltAggregateWebNativeProject Include=\"{Xml(RelativeProjectPath(projectDirectory, sampleProject))}\" />");
                 items.AppendLine($"    <ProjectReference Include=\"{Xml(RelativeProjectPath(projectDirectory, bindingProjects))}\" />");
                 items.AppendLine($"    <NativeFileReference Include=\"{Xml(archive)}\" />");
@@ -1248,6 +1248,7 @@ static class MonorepoApp
         var restoreResult = await RunProcessAsync(root, "dotnet", new[]
         {
             "restore", project,
+            $"-p:Configuration={options.Configuration}",
             "-p:MSBuildEnableWorkloadResolver=false",
             $"-m:{Environment.ProcessorCount}",
             "-p:RedBoltPlatform=browser-wasm",
