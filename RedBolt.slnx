@@ -1,12 +1,12 @@
 ﻿<Solution>
-  <Folder Name="/RedBolt/extern/SharpCpp/src/">
-    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Metadata/SharpCpp.Metadata.csproj" />
-    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Model/SharpCpp.Model.csproj" />
-    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Parsing/SharpCpp.Parsing.csproj" />
-    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Pipeline/SharpCpp.Pipeline.csproj" />
-    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Rendering/SharpCpp.Rendering.csproj" />
-    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Std/SharpCpp.Std.csproj" />
-    <Project Path="RedBolt/extern/SharpCpp/src/SharpCpp.Support/SharpCpp.Support.csproj" />
+  <Folder Name="/extern/SharpCpp/src/">
+    <Project Path="extern/SharpCpp/src/SharpCpp.Metadata/SharpCpp.Metadata.csproj" />
+    <Project Path="extern/SharpCpp/src/SharpCpp.Model/SharpCpp.Model.csproj" />
+    <Project Path="extern/SharpCpp/src/SharpCpp.Parsing/SharpCpp.Parsing.csproj" />
+    <Project Path="extern/SharpCpp/src/SharpCpp.Pipeline/SharpCpp.Pipeline.csproj" />
+    <Project Path="extern/SharpCpp/src/SharpCpp.Rendering/SharpCpp.Rendering.csproj" />
+    <Project Path="extern/SharpCpp/src/SharpCpp.Std/SharpCpp.Std.csproj" />
+    <Project Path="extern/SharpCpp/src/SharpCpp.Support/SharpCpp.Support.csproj" />
   </Folder>
   <Folder Name="/RedBolt/">
     <Project Path="RedBolt/src/RedBolt/Audio/RedBolt.Audio.csproj" />
