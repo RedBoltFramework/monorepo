@@ -779,7 +779,7 @@ static class MonorepoApp
         {
             targets.AppendLine("  <Target Name=\"RedBoltBuildAggregateAndroidNativeModules\" BeforeTargets=\"RedBoltPrepareAndroidRuntime\" Condition=\"'@(RedBoltAggregateAndroidNativeProject)' != ''\">");
             targets.AppendLine("    <MSBuild Projects=\"@(RedBoltAggregateAndroidNativeProject)\" Targets=\"Restore;RedBoltPrepareAndroidRuntime\" BuildInParallel=\"false\"");
-            targets.AppendLine("             Properties=\"Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltPlatform=$(RedBoltPlatform);RuntimeIdentifier=$(RuntimeIdentifier);RedBoltBuildAllAndroidPackages=false;MSBuildEnableWorkloadResolver=false\" />");
+            targets.AppendLine("             Properties=\"Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltPlatform=$(RedBoltPlatform);RuntimeIdentifier=$(RuntimeIdentifier);RedBoltBuildAllAndroidPackages=false\" RemoveProperties=\"TargetFramework\" />");
             targets.AppendLine("  </Target>");
         }
 
