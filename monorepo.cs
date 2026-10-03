@@ -369,7 +369,7 @@ static class MonorepoApp
                 foreach (var module in selected)
                 {
                     var output = Path.Combine(module.Root, "src", "RedBolt", "Sample");
-                    GenerateSampleHost(root, output, module.Definition.Name, [module], aggregate: false,
+                    GenerateSampleHost(root, output, module.Definition.Name, [module], available, aggregate: false,
                         options.Check, templates, ref stale);
                 }
             }
@@ -378,7 +378,7 @@ static class MonorepoApp
                 var output = Path.GetFullPath(options.Output, root);
                 EnsureOutputIsInWorkspace(root, output);
                 var name = options.Name ?? Path.GetFileName(output.TrimEnd(Path.DirectorySeparatorChar));
-                GenerateSampleHost(root, output, name, selected, aggregate: true,
+                GenerateSampleHost(root, output, name, selected, available, aggregate: true,
                     options.Check, templates, ref stale);
             }
 
@@ -441,6 +441,8 @@ static class MonorepoApp
             throw new InvalidDataException($"Catalog supports neither web nor Android: {catalogPath}");
         if (definition.Android && string.IsNullOrWhiteSpace(definition.ApplicationId))
             throw new InvalidDataException($"Android catalog has no application id: {catalogPath}");
+        if (!definition.AndroidNative && definition.NativeDependencies.Count > 0)
+            throw new InvalidDataException($"Catalog has native dependencies but builds no Android natives (androidNative is false): {catalogPath}");
         if (definition.Samples.Count == 0)
             throw new InvalidDataException($"Catalog has no samples: {catalogPath}");
         if (definition.Samples.Select(sample => sample.Id).Distinct(StringComparer.OrdinalIgnoreCase).Count() != definition.Samples.Count)
@@ -522,6 +524,7 @@ static class MonorepoApp
         string output,
         string name,
         IReadOnlyList<SampleModule> modules,
+        IReadOnlyList<SampleModule> available,
         bool aggregate,
         bool check,
         SampleTemplates templates,
@@ -541,7 +544,7 @@ static class MonorepoApp
         if (webModules.Length > 0)
             GenerateWebHost(root, output, name, webModules, nativeOwner, aggregate, check, templates, ref stale);
         if (androidModules.Length > 0)
-            GenerateAndroidHost(root, output, name, androidModules, nativeOwner, aggregate, check, templates, ref stale);
+            GenerateAndroidHost(root, output, name, androidModules, available, nativeOwner, aggregate, check, templates, ref stale);
 
         Console.WriteLine($"{(check ? "Checked" : "Generated")} {name}: {string.Join(", ", modules.Select(module => module.Definition.Name))}");
     }
@@ -565,6 +568,31 @@ static class MonorepoApp
         var dependencies = nativeModules.SelectMany(module => module.Definition.NativeDependencies)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
         return nativeModules.Where(module => !dependencies.Contains(module.Definition.Name)).ToArray();
+    }
+
+    // The modules that own native libraries which the given sample set loads on Android: the native
+    // modules among them plus their transitive native dependencies, ordered by name. Modules that build
+    // no Android natives are left out. The engine's own natives are implicit.
+    private static SampleModule[] FindAndroidNativeClosure(
+        IReadOnlyList<SampleModule> modules,
+        IReadOnlyList<SampleModule> available)
+    {
+        var closure = new Dictionary<string, SampleModule>(StringComparer.OrdinalIgnoreCase);
+        var pending = new Stack<SampleModule>(modules.Where(module => module.Definition.Native && module.Definition.AndroidNative));
+        while (pending.Count > 0)
+        {
+            var module = pending.Pop();
+            if (!closure.TryAdd(module.Definition.Name, module))
+                continue;
+            foreach (var dependency in module.Definition.NativeDependencies)
+            {
+                var owner = available.FirstOrDefault(candidate => candidate.Definition.Name.Equals(dependency, StringComparison.OrdinalIgnoreCase))
+                    ?? throw new InvalidDataException($"Module '{module.Definition.Name}' depends on unknown native module '{dependency}'.");
+                if (owner.Definition.Native && owner.Definition.AndroidNative)
+                    pending.Push(owner);
+            }
+        }
+        return closure.Values.OrderBy(module => module.Definition.Name, StringComparer.Ordinal).ToArray();
     }
 
     private static void GenerateAggregateInfrastructure(
@@ -714,6 +742,7 @@ static class MonorepoApp
         string output,
         string name,
         IReadOnlyList<SampleModule> modules,
+        IReadOnlyList<SampleModule> available,
         SampleModule? nativeOwner,
         bool aggregate,
         bool check,
@@ -732,7 +761,7 @@ static class MonorepoApp
         if (manifests.Length > 1)
             throw new InvalidDataException($"Selected modules require different Android manifests: {string.Join(", ", manifests)}");
 
-        var project = GenerateAndroidProject(templates.AndroidProject, root, directory, assemblyName, applicationId, modules, nativeOwner,
+        var project = GenerateAndroidProject(templates.AndroidProject, root, directory, assemblyName, applicationId, modules, available, nativeOwner,
             customManifest: manifests.Length == 1);
         var program = GenerateAndroidProgram(templates.AndroidProgram, modules, aggregate);
         WriteGeneratedFile(Path.Combine(directory, projectName), project, check, ref stale);
@@ -748,6 +777,7 @@ static class MonorepoApp
         string assemblyName,
         string applicationId,
         IReadOnlyList<SampleModule> modules,
+        IReadOnlyList<SampleModule> available,
         SampleModule? nativeOwner,
         bool customManifest)
     {
@@ -757,6 +787,9 @@ static class MonorepoApp
         properties.AppendLine("    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>");
         if (nativeOwner is not null)
             properties.AppendLine("    <RedBoltExternalAndroidNativeOutput>$(RedBoltNativeOutputRoot)</RedBoltExternalAndroidNativeOutput>");
+        var nativeModules = FindAndroidNativeClosure(modules, available);
+        if (nativeModules.Length > 0)
+            properties.AppendLine($"    <RedBoltAndroidSampleNativeModules>{Xml(string.Join(';', nativeModules.Select(module => module.Definition.Name)))}</RedBoltAndroidSampleNativeModules>");
         if (customManifest)
             properties.AppendLine("    <AndroidManifest>AndroidManifest.xml</AndroidManifest>");
 
@@ -765,7 +798,7 @@ static class MonorepoApp
         AppendProjectItems(items, projectDirectory, modules, web: false);
         if (nativeOwner is null)
         {
-            foreach (var module in FindNativeOwners(modules))
+            foreach (var module in FindNativeOwners(modules).Where(module => module.Definition.AndroidNative))
             {
                 var sampleProject = Path.Combine(module.Root, "src", "RedBolt", "Sample", "Android", "RedBolt.Sample.Android.csproj");
                 items.AppendLine($"    <RedBoltAggregateAndroidNativeProject Include=\"{Xml(RelativeProjectPath(projectDirectory, sampleProject))}\" />");
@@ -1924,6 +1957,7 @@ static class MonorepoApp
         public bool Android { get; set; }
         public bool Native { get; set; }
         public bool WebNative { get; set; }
+        public bool AndroidNative { get; set; } = true;
         public List<string> NativeDependencies { get; set; } = [];
         public List<string> ProjectReferences { get; set; } = [];
         public List<string> PlatformIndependentProjectReferences { get; set; } = [];

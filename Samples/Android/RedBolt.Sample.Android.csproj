@@ -10,6 +10,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <AssemblyName>RedBolt.Samples.All.Android</AssemblyName>
     <ApplicationId>org.redbolt.samples.all</ApplicationId>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <RedBoltAndroidSampleNativeModules>RedBolt.Network;RedBolt.PhysicsBox2D;RedBolt.PhysicsJolt;RedBolt.RmlUI;RedBolt.XR</RedBoltAndroidSampleNativeModules>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <!-- </redbolt-generated name="android-project-properties"> -->
   </PropertyGroup>
@@ -98,7 +99,6 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <AndroidAsset Include="../../RedBolt.Glow/bin/SampleData.Glow/**/*" Link="SampleData/%(RecursiveDir)%(Filename)%(Extension)" />
     <AndroidAsset Include="../../RedBolt.IK/bin/SampleData.IK/**/*" Link="SampleData/%(RecursiveDir)%(Filename)%(Extension)" />
     <AndroidAsset Include="../../RedBolt.RmlUI/bin/SampleData.RmlUI/**/*" Link="SampleData/%(RecursiveDir)%(Filename)%(Extension)" />
-    <RedBoltAggregateAndroidNativeProject Include="../../RedBolt.Glow/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
     <RedBoltAggregateAndroidNativeProject Include="../../RedBolt.PhysicsBox2D/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
     <RedBoltAggregateAndroidNativeProject Include="../../RedBolt.RmlUI/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
     <RedBoltAggregateAndroidNativeProject Include="../../RedBolt.XR/src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj" />
@@ -111,11 +111,6 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
   <Target Name="RedBoltBuildAggregateAndroidNativeModules" BeforeTargets="RedBoltPrepareAndroidRuntime" Condition="'@(RedBoltAggregateAndroidNativeProject)' != ''">
     <MSBuild Projects="@(RedBoltAggregateAndroidNativeProject)" Targets="Restore;RedBoltPrepareAndroidRuntime" BuildInParallel="false"
              Properties="Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltPlatform=$(RedBoltPlatform);RuntimeIdentifier=$(RuntimeIdentifier);RedBoltBuildAllAndroidPackages=false" RemoveProperties="TargetFramework" />
-  </Target>
-  <Target Name="RedBoltCollectAdditionalAndroidSampleLibraries" BeforeTargets="_BuildApkEmbed;_BuildApkFastDev" DependsOnTargets="RedBoltPrepareAndroidRuntime">
-    <ItemGroup>
-      <AndroidNativeLibrary Include="$(RedBoltNativeOutputRoot)/libopenxr_loader.so" />
-    </ItemGroup>
   </Target>
   <!-- </redbolt-generated name="android-project-targets"> -->
 </Project>
