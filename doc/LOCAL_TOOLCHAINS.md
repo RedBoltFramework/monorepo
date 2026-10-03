@@ -50,6 +50,8 @@ dotnet build src/RedBolt/Sample/Android/RedBolt.Sample.Android.csproj \
   'ndk;27.2.12479018'
 ```
 
+To fetch the Android toolchain without the Android project, `dotnet run --file monorepo.cs -- install-android [--root DIR] [--accept-licenses]` downloads the pinned JDK, command-line tools, and SDK/NDK packages into `DIR/jdk` and `DIR/sdk` (default `build/android`); point the build at it with `RedBoltAndroidRoot`. It is a manual helper and is not part of any build.
+
 Initialize missing dependencies or submodules before building:
 
 ```sh

@@ -4,8 +4,10 @@ exec dotnet run --file "$0" -- "$@"
 #endif
 
 using System.Diagnostics;
+using System.IO.Compression;
 using System.Net;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -18,6 +20,17 @@ return await MonorepoApp.RunAsync(args);
 static class MonorepoApp
 {
     private const string GitHubOrganization = "RedBoltFramework";
+
+    private const string AndroidJdkVersion = "17.0.20.1";
+    private const string AndroidCommandLineToolsBuild = "13114758";
+
+    private static readonly string[] AndroidSdkPackages =
+    [
+        "build-tools;36.0.0",
+        "platform-tools",
+        "platforms;android-36",
+        "ndk;27.2.12479018",
+    ];
 
     private static readonly Repository[] Repositories =
     [
@@ -139,6 +152,24 @@ static class MonorepoApp
             }
 
             return await PublishSamplesAsync(publishOptions);
+        }
+
+        if (string.Equals(args[0], "install-android", StringComparison.OrdinalIgnoreCase))
+        {
+            if (args.Length == 2 && args[1] is "-h" or "--help")
+            {
+                PrintInstallAndroidHelp();
+                return 0;
+            }
+
+            if (!TryParseInstallAndroidOptions(args[1..], out var androidOptions, out var androidError))
+            {
+                Console.Error.WriteLine(androidError);
+                PrintInstallAndroidHelp();
+                return 1;
+            }
+
+            return await InstallAndroidAsync(androidOptions);
         }
 
         if (!string.Equals(args[0], "init", StringComparison.OrdinalIgnoreCase))
@@ -1421,7 +1452,310 @@ static class MonorepoApp
         }
     }
 
-    private static async Task<int> RunProcessAsync(string directory, string fileName, IReadOnlyCollection<string> arguments)
+    private static bool TryParseInstallAndroidOptions(string[] args, out InstallAndroidOptions options, out string? error)
+    {
+        options = new InstallAndroidOptions(Path.Combine(GetScriptDirectory(), "build", "android"), false);
+        error = null;
+        for (var index = 0; index < args.Length; index++)
+        {
+            var argument = args[index];
+            var separator = argument.IndexOf('=');
+            var name = separator >= 0 ? argument[..separator] : argument;
+            var value = separator >= 0 ? argument[(separator + 1)..] : null;
+
+            if (name == "--accept-licenses" && value is null)
+            {
+                options = options with { AcceptLicenses = true };
+                continue;
+            }
+            if (name != "--root")
+            {
+                error = $"Unknown install-android option '{argument}'.";
+                return false;
+            }
+            if (value is null && index + 1 < args.Length && !args[index + 1].StartsWith("-", StringComparison.Ordinal))
+                value = args[++index];
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                error = $"Option '{name}' requires a value.";
+                return false;
+            }
+            options = options with { Root = Path.GetFullPath(value) };
+        }
+
+        return true;
+    }
+
+    private static async Task<int> InstallAndroidAsync(InstallAndroidOptions options)
+    {
+        if (!TryGetAndroidHostPlatform(out var jdkPlatform, out var toolsPlatform, out var platformError))
+        {
+            Console.Error.WriteLine(platformError);
+            return 1;
+        }
+
+        var root = options.Root;
+        var jdkDirectory = Path.Combine(root, "jdk");
+        var sdkDirectory = Path.Combine(root, "sdk");
+        var javaPath = Path.Combine(jdkDirectory, "bin", OperatingSystem.IsWindows() ? "java.exe" : "java");
+        var toolsDirectory = Path.Combine(sdkDirectory, "cmdline-tools", "latest");
+        var sdkManagerPath = Path.Combine(toolsDirectory, "bin", OperatingSystem.IsWindows() ? "sdkmanager.bat" : "sdkmanager");
+        var workDirectory = Path.Combine(root, ".download");
+
+        try
+        {
+            Directory.CreateDirectory(root);
+            if (Directory.Exists(workDirectory))
+                Directory.Delete(workDirectory, true);
+
+            if (!File.Exists(javaPath))
+            {
+                Console.WriteLine($"Installing Microsoft OpenJDK {AndroidJdkVersion} to {jdkDirectory}");
+                var extension = OperatingSystem.IsWindows() ? "zip" : "tar.gz";
+                var url = $"https://aka.ms/download-jdk/microsoft-jdk-{AndroidJdkVersion}-{jdkPlatform}.{extension}";
+                var archive = Path.Combine(workDirectory, $"jdk.{extension}");
+                var extracted = Path.Combine(workDirectory, "jdk");
+                Directory.CreateDirectory(workDirectory);
+                if (!await DownloadFileAsync(url, archive) || !await ExtractArchiveAsync(archive, extracted))
+                    return 1;
+
+                var jdkHome = FindJdkHome(extracted);
+                if (jdkHome is null)
+                {
+                    Console.Error.WriteLine($"The downloaded JDK archive has an unexpected layout: {url}");
+                    return 1;
+                }
+                ReplaceDirectory(jdkHome, jdkDirectory);
+                Directory.Delete(workDirectory, true);
+                if (!File.Exists(javaPath))
+                {
+                    Console.Error.WriteLine($"JDK installation did not produce '{javaPath}'.");
+                    return 1;
+                }
+            }
+            else
+                Console.WriteLine($"JDK is already installed: {jdkDirectory}");
+
+            if (!File.Exists(sdkManagerPath))
+            {
+                Console.WriteLine($"Installing Android command-line tools {AndroidCommandLineToolsBuild} to {toolsDirectory}");
+                var url = $"https://dl.google.com/android/repository/commandlinetools-{toolsPlatform}-{AndroidCommandLineToolsBuild}_latest.zip";
+                var archive = Path.Combine(workDirectory, "cmdline-tools.zip");
+                var extracted = Path.Combine(workDirectory, "cmdline-tools");
+                Directory.CreateDirectory(workDirectory);
+                if (!await DownloadFileAsync(url, archive) || !await ExtractArchiveAsync(archive, extracted))
+                    return 1;
+
+                var toolsHome = Path.Combine(extracted, "cmdline-tools");
+                if (!File.Exists(Path.Combine(toolsHome, "bin", Path.GetFileName(sdkManagerPath))))
+                {
+                    Console.Error.WriteLine($"The downloaded command-line tools archive has an unexpected layout: {url}");
+                    return 1;
+                }
+                ReplaceDirectory(toolsHome, toolsDirectory);
+                Directory.Delete(workDirectory, true);
+                if (!File.Exists(sdkManagerPath))
+                {
+                    Console.Error.WriteLine($"Command-line tools installation did not produce '{sdkManagerPath}'.");
+                    return 1;
+                }
+            }
+            else
+                Console.WriteLine($"Android command-line tools are already installed: {toolsDirectory}");
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine($"Cannot install into '{root}': {exception.Message}");
+            return 1;
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(workDirectory))
+                    Directory.Delete(workDirectory, true);
+            }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+            {
+                Console.Error.WriteLine($"Warning: cannot delete '{workDirectory}': {exception.Message}");
+            }
+        }
+
+        Console.WriteLine($"Installing Android SDK packages: {string.Join(", ", AndroidSdkPackages)}");
+        var sdkManagerArguments = new List<string> { $"--sdk_root={sdkDirectory}" };
+        sdkManagerArguments.AddRange(AndroidSdkPackages);
+        var environment = new Dictionary<string, string> { ["JAVA_HOME"] = jdkDirectory };
+        var licenseAnswers = options.AcceptLicenses ? string.Concat(Enumerable.Repeat("y\n", 100)) : null;
+        var exitCode = await RunProcessAsync(root, sdkManagerPath, sdkManagerArguments, environment, licenseAnswers);
+        if (exitCode != 0)
+        {
+            Console.Error.WriteLine($"sdkmanager failed with exit code {exitCode}.");
+            if (!options.AcceptLicenses)
+                Console.Error.WriteLine("Accept the SDK licenses when prompted, or pass --accept-licenses.");
+            return exitCode;
+        }
+
+        var missingPackages = AndroidSdkPackages
+            .Where(package => !Directory.Exists(Path.Combine(sdkDirectory, package.Replace(';', Path.DirectorySeparatorChar))))
+            .ToArray();
+        if (missingPackages.Length > 0)
+        {
+            Console.Error.WriteLine($"sdkmanager finished but these packages are not installed: {string.Join(", ", missingPackages)}.");
+            Console.Error.WriteLine("The SDK licenses were probably not accepted. Run again and accept them when prompted, or pass --accept-licenses.");
+            return 1;
+        }
+
+        Console.WriteLine();
+        Console.WriteLine($"Android toolchain is ready in {root}");
+        Console.WriteLine("Point the build at it with the RedBoltAndroidRoot MSBuild property or environment variable:");
+        Console.WriteLine($"  dotnet build -p:RedBoltAndroidRoot=\"{root}\" ...");
+        Console.WriteLine(OperatingSystem.IsWindows()
+            ? $"  $env:RedBoltAndroidRoot = \"{root}\""
+            : $"  export RedBoltAndroidRoot=\"{root}\"");
+        return 0;
+    }
+
+    private static bool TryGetAndroidHostPlatform(out string jdkPlatform, out string toolsPlatform, out string? error)
+    {
+        jdkPlatform = toolsPlatform = string.Empty;
+        error = null;
+        var architecture = RuntimeInformation.OSArchitecture switch
+        {
+            Architecture.X64 => "x64",
+            Architecture.Arm64 => "aarch64",
+            _ => null,
+        };
+        string? system = null;
+        if (OperatingSystem.IsLinux() && architecture == "x64")
+        {
+            system = "linux";
+            toolsPlatform = "linux";
+        }
+        else if (OperatingSystem.IsMacOS())
+        {
+            system = "macos";
+            toolsPlatform = "mac";
+        }
+        else if (OperatingSystem.IsWindows())
+        {
+            system = "windows";
+            toolsPlatform = "win";
+        }
+
+        if (system is null || architecture is null)
+        {
+            error = $"Unsupported host platform '{RuntimeInformation.OSDescription}' ({RuntimeInformation.OSArchitecture}). " +
+                    "install-android supports Linux x64, macOS x64 or arm64, and Windows x64 or arm64.";
+            return false;
+        }
+
+        jdkPlatform = $"{system}-{architecture}";
+        return true;
+    }
+
+    private static async Task<bool> DownloadFileAsync(string url, string destination)
+    {
+        Console.WriteLine($"Downloading {url}");
+        var partial = destination + ".part";
+        try
+        {
+            using var client = new HttpClient { Timeout = Timeout.InfiniteTimeSpan };
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(30));
+            using var response = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, timeout.Token);
+            if (!response.IsSuccessStatusCode)
+            {
+                Console.Error.WriteLine($"Download failed: {url} returned {(int)response.StatusCode} {response.ReasonPhrase}.");
+                return false;
+            }
+
+            await using (var source = await response.Content.ReadAsStreamAsync(timeout.Token))
+            await using (var target = File.Create(partial))
+                await source.CopyToAsync(target, timeout.Token);
+            File.Move(partial, destination, true);
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            Console.Error.WriteLine($"Download failed: {url} did not complete within 30 minutes.");
+            return false;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or IOException or UnauthorizedAccessException)
+        {
+            Console.Error.WriteLine($"Download failed: {url}: {exception.Message}");
+            return false;
+        }
+        finally
+        {
+            if (File.Exists(partial))
+                File.Delete(partial);
+        }
+    }
+
+    private static async Task<bool> ExtractArchiveAsync(string archive, string destination)
+    {
+        Directory.CreateDirectory(destination);
+        if (archive.EndsWith(".zip", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                ZipFile.ExtractToDirectory(archive, destination);
+                if (!OperatingSystem.IsWindows())
+                {
+                    // Zip entries may not carry Unix permissions; tools in bin directories must be executable.
+                    foreach (var file in Directory.EnumerateFiles(destination, "*", SearchOption.AllDirectories))
+                    {
+                        if (Path.GetFileName(Path.GetDirectoryName(file)) == "bin")
+                        {
+                            File.SetUnixFileMode(file, File.GetUnixFileMode(file) |
+                                UnixFileMode.UserExecute | UnixFileMode.GroupExecute | UnixFileMode.OtherExecute);
+                        }
+                    }
+                }
+                return true;
+            }
+            catch (Exception exception) when (exception is IOException or InvalidDataException or UnauthorizedAccessException)
+            {
+                Console.Error.WriteLine($"Cannot extract '{archive}': {exception.Message}");
+                return false;
+            }
+        }
+
+        var exitCode = await RunProcessAsync(destination, "tar", ["-xzf", archive, "-C", destination]);
+        if (exitCode != 0)
+            Console.Error.WriteLine($"Cannot extract '{archive}': tar exited with code {exitCode}.");
+        return exitCode == 0;
+    }
+
+    private static string? FindJdkHome(string extracted)
+    {
+        // The archive holds one top-level directory; on macOS the JDK home is under Contents/Home.
+        var directories = Directory.GetDirectories(extracted);
+        if (directories.Length != 1)
+            return null;
+        var macHome = Path.Combine(directories[0], "Contents", "Home");
+        if (Directory.Exists(macHome))
+            return macHome;
+        return Directory.Exists(Path.Combine(directories[0], "bin")) ? directories[0] : null;
+    }
+
+    private static void ReplaceDirectory(string source, string destination)
+    {
+        if (Directory.Exists(destination))
+        {
+            if (Directory.EnumerateFileSystemEntries(destination).Any())
+                throw new IOException($"'{destination}' already exists and is not empty. Move or delete it, then run again.");
+            Directory.Delete(destination);
+        }
+        Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+        Directory.Move(source, destination);
+    }
+
+    private static async Task<int> RunProcessAsync(
+        string directory,
+        string fileName,
+        IReadOnlyCollection<string> arguments,
+        IReadOnlyDictionary<string, string>? environment = null,
+        string? standardInput = null)
     {
         using var process = new Process
         {
@@ -1434,10 +1768,28 @@ static class MonorepoApp
         };
         foreach (var argument in arguments)
             process.StartInfo.ArgumentList.Add(argument);
+        if (environment is not null)
+        {
+            foreach (var (name, value) in environment)
+                process.StartInfo.Environment[name] = value;
+        }
+        process.StartInfo.RedirectStandardInput = standardInput is not null;
 
         try
         {
             process.Start();
+            if (standardInput is not null)
+            {
+                try
+                {
+                    await process.StandardInput.WriteAsync(standardInput);
+                    process.StandardInput.Close();
+                }
+                catch (IOException)
+                {
+                    // The process exited before consuming all input.
+                }
+            }
             await process.WaitForExitAsync();
             return process.ExitCode;
         }
@@ -1464,8 +1816,25 @@ static class MonorepoApp
         Console.WriteLine("  push              Push every cloned repository");
         Console.WriteLine("  generate-samples  Generate web and Android sample hosts");
         Console.WriteLine("  publish-samples   Deploy built web samples to the website");
+        Console.WriteLine("  install-android   Download the Android JDK and SDK used by the build");
         Console.WriteLine();
         Console.WriteLine("Run './monorepo.cs <subcommand> --help' for command options.");
+    }
+
+    private static void PrintInstallAndroidHelp()
+    {
+        Console.WriteLine("Usage:");
+        Console.WriteLine("  ./monorepo.cs install-android [--root DIR] [--accept-licenses]");
+        Console.WriteLine();
+        Console.WriteLine("Options:");
+        Console.WriteLine("  --root DIR         Install under DIR/jdk and DIR/sdk (default: build/android)");
+        Console.WriteLine("  --accept-licenses  Answer the Android SDK license prompts with 'y'");
+        Console.WriteLine();
+        Console.WriteLine($"Downloads Microsoft OpenJDK {AndroidJdkVersion} and the Android command-line tools when missing,");
+        Console.WriteLine($"then installs: {string.Join(", ", AndroidSdkPackages)}.");
+        Console.WriteLine("Existing components are kept, so repeated runs are safe. Without --accept-licenses,");
+        Console.WriteLine("sdkmanager prompts for license acceptance. Build with -p:RedBoltAndroidRoot=DIR or");
+        Console.WriteLine("the RedBoltAndroidRoot environment variable to use the installed toolchain.");
     }
 
     private static void PrintPullHelp()
@@ -1525,6 +1894,7 @@ static class MonorepoApp
     private sealed record WebModule(string Name, string Slug, string Category, string Description);
     private sealed record SampleBundle(string Slug, IReadOnlyList<string> Modules);
     private sealed record WebSample(string Id, string Name, string Application);
+    private sealed record InstallAndroidOptions(string Root, bool AcceptLicenses);
     private sealed record PublishedBundle(string OutputDirectory);
     private sealed record SampleModule(string Root, string CatalogPath, SampleModuleDefinition Definition);
     private sealed record SampleTemplates(
