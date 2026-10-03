@@ -25,11 +25,11 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <ProjectReference Include="../../RedBolt.CSG/src/RedBolt/CSG/RedBolt.CSG.csproj" />
     <ProjectReference Include="../../RedBolt.IK/src/RedBolt/IK/RedBolt.IK.csproj" />
     <ProjectReference Include="../../RedBolt.Navigation/src/RedBolt/Navigation/RedBolt.Navigation.csproj" />
-    <ProjectReference Include="../../RedBolt.Navigation/extern/DotRecast/src/DotRecast.Core/DotRecast.Core.csproj" GlobalPropertiesToRemove="RedBoltPlatform;RedBoltTargetFramework;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishSelfContained" />
-    <ProjectReference Include="../../RedBolt.Navigation/extern/DotRecast/src/DotRecast.Detour/DotRecast.Detour.csproj" GlobalPropertiesToRemove="RedBoltPlatform;RedBoltTargetFramework;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishSelfContained" />
-    <ProjectReference Include="../../RedBolt.Navigation/extern/DotRecast/src/DotRecast.Detour.Crowd/DotRecast.Detour.Crowd.csproj" GlobalPropertiesToRemove="RedBoltPlatform;RedBoltTargetFramework;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishSelfContained" />
-    <ProjectReference Include="../../RedBolt.Navigation/extern/DotRecast/src/DotRecast.Detour.TileCache/DotRecast.Detour.TileCache.csproj" GlobalPropertiesToRemove="RedBoltPlatform;RedBoltTargetFramework;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishSelfContained" />
-    <ProjectReference Include="../../RedBolt.Navigation/extern/DotRecast/src/DotRecast.Recast/DotRecast.Recast.csproj" GlobalPropertiesToRemove="RedBoltPlatform;RedBoltTargetFramework;RuntimeIdentifier;RuntimeIdentifiers;SelfContained;PublishSelfContained" />
+    <ProjectReference Include="../../RedBolt.Navigation/extern/DotRecast/src/DotRecast.Core/DotRecast.Core.csproj" GlobalPropertiesToRemove="RedBoltPlatform;RedBoltTargetFramework;$(RedBoltInnerBuildGlobalPropertiesToRemove)" />
+    <ProjectReference Include="../../RedBolt.Navigation/extern/DotRecast/src/DotRecast.Detour/DotRecast.Detour.csproj" GlobalPropertiesToRemove="RedBoltPlatform;RedBoltTargetFramework;$(RedBoltInnerBuildGlobalPropertiesToRemove)" />
+    <ProjectReference Include="../../RedBolt.Navigation/extern/DotRecast/src/DotRecast.Detour.Crowd/DotRecast.Detour.Crowd.csproj" GlobalPropertiesToRemove="RedBoltPlatform;RedBoltTargetFramework;$(RedBoltInnerBuildGlobalPropertiesToRemove)" />
+    <ProjectReference Include="../../RedBolt.Navigation/extern/DotRecast/src/DotRecast.Detour.TileCache/DotRecast.Detour.TileCache.csproj" GlobalPropertiesToRemove="RedBoltPlatform;RedBoltTargetFramework;$(RedBoltInnerBuildGlobalPropertiesToRemove)" />
+    <ProjectReference Include="../../RedBolt.Navigation/extern/DotRecast/src/DotRecast.Recast/DotRecast.Recast.csproj" GlobalPropertiesToRemove="RedBoltPlatform;RedBoltTargetFramework;$(RedBoltInnerBuildGlobalPropertiesToRemove)" />
     <ProjectReference Include="../../RedBolt.Network/src/RedBolt/Network/RedBolt.Network.csproj" />
     <ProjectReference Include="../../RedBolt.Particles/src/RedBolt/Particles/RedBolt.Particles.csproj" />
     <ProjectReference Include="../../RedBolt.PhysicsBox2D/src/RedBolt/PhysicsBox2D/RedBolt.PhysicsBox2D.csproj" />
