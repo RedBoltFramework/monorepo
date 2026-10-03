@@ -1,6 +1,3 @@
 <Project>
-  <PropertyGroup>
-    <RedBoltBuildRoot Condition="'$(RedBoltBuildRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)build'))</RedBoltBuildRoot>
-  </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)RedBolt/Directory.Solution.props" />
 </Project>

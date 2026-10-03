@@ -2,7 +2,6 @@
 <Project>
   <PropertyGroup>
     <RedBoltRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../RedBolt'))</RedBoltRoot>
-    <RedBoltExpectedBuildRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)../build'))</RedBoltExpectedBuildRoot>
     <RedBoltRestoreProjectName>Samples/All/$(MSBuildProjectName)</RedBoltRestoreProjectName>
   </PropertyGroup>
   <Import Project="$(MSBuildThisFileDirectory)../RedBolt/src/Directory.Build.props" />

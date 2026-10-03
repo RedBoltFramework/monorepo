@@ -53,17 +53,17 @@
   iteration.
 - Use `--no-restore` only after a matching restore.
 - Finish each build before starting another build or launching tests.
-- Preserve the saved build selection and active build root. Do not delete or
-  rewrite build configuration files to infer defaults.
+- Preserve the saved build selection in `build/BuildConfig.props`. Do not delete
+  or rewrite build configuration files to infer defaults.
 - Pass `-maxcpucount` to `dotnet build` and `--parallel` to `cmake --build`
   without numeric limits for ordinary builds. Use a single job only for build
   system debugging.
 - Select a platform variant with `-p:RedBoltBuildPlatform=linux-x64`,
   `win-x64`, `android-x64`, `android-arm64`, or `browser-wasm`.
-- Each solution `Build` or `Rebuild` records its active build root in
-  `build/BuildRoot.props`. Direct `.csproj` builds use the root selected by the
-  module's last solution build. Delete `BuildRoot.props` to restore the
-  module-local default.
+- The build root is selected statically, not recorded by builds. Inside the
+  monorepo every entry point (root solution, module solution, direct `.csproj`)
+  uses the root `build/`; a standalone checkout uses its own `build/`.
+  `-p:RedBoltBuildRoot=<dir>` overrides both.
 - Do not run root and module solutions concurrently; they can share generated
   dependencies.
 - Follow [verification guidance](doc/VERIFICATION.md). Expand checks for shared
