@@ -42,9 +42,8 @@ dotnet build RedBolt.slnx --configuration Debug -maxcpucount
 dotnet build RedBolt/RedBolt.slnx --configuration Debug -maxcpucount
 ```
 
-For a deliberately selected Linux x64 aggregate build, use the existing
-`RedBoltDisablePlatforms`, `RedBoltEnablePlatforms`, `RedBoltDisableArchitectures`,
-and `RedBoltEnableArchitectures` properties. Consult core build requirements for
+For a deliberately selected Linux x64 aggregate build, use the
+`RedBoltEnable` property, for example `-p:RedBoltEnable=linux-x64`. Consult core build requirements for
 selection persistence. Build test prerequisites before using
 `BuildProjectReferences=false`; existing assemblies must reflect the change.
 From the test repository:

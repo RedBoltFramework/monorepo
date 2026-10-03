@@ -1250,7 +1250,7 @@ static class MonorepoApp
             "-p:MSBuildEnableWorkloadResolver=false",
             $"-m:{Environment.ProcessorCount}",
             "-p:RedBoltPlatform=browser-wasm",
-            "-p:RedBoltEnablePlatforms=web",
+            "-p:RedBoltEnable=linux-x64%2cbrowser-wasm",
             "-p:RuntimeIdentifier=browser-wasm",
         });
         if (restoreResult != 0)
@@ -1265,7 +1265,7 @@ static class MonorepoApp
             "--no-restore",
             $"-m:{Environment.ProcessorCount}",
             "-p:RedBoltPlatform=browser-wasm",
-            "-p:RedBoltEnablePlatforms=web",
+            "-p:RedBoltEnable=linux-x64%2cbrowser-wasm",
         };
         return await RunProcessAsync(root, "dotnet", publishArguments);
     }
