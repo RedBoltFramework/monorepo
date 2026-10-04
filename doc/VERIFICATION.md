@@ -25,8 +25,9 @@ system.
 - Packaging changes: create and validate affected packages. Release readiness:
   run the supported platform/configuration/package matrix.
 - Coverage tasks and release coverage validation: run the coverage harness below
-  with its default 95% line and branch gate. Coverage is not an automatic gate
-  for every edit. A zero minimum is diagnostic only.
+  and do not reduce line or branch coverage below the recorded baseline
+  (`RedBolt.Tests/coverage.baseline`; the harness reports a drop as an
+  advisory). Coverage is not an automatic gate for every edit.
 
 Fix regressions caused by the change, rerun affected checks, and finish when the
 requested behavior and applicable gates pass. Broaden or repeat checks only
