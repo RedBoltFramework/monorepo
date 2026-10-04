@@ -114,7 +114,6 @@ internal static class SampleCatalog
         new("redbolt:dynamic-geometry", "Dynamic Geometry", static () => new global::RedBolt.Sample.DynamicGeometry.DynamicGeometry()),
         new("redbolt:hello-gui", "Hello GUI", static () => new global::RedBolt.Sample.HelloGUI.HelloGUI()),
         new("rmlui:hello-rmlui", "Hello RmlUI", static () => new global::RedBolt.Sample.HelloRmlUI.HelloRmlUI()),
-        new("xr:hello-vr", "Hello VR", static () => new global::RedBolt.Sample.HelloVR.HelloVRSample()),
         new("redbolt:hello-world", "Hello World", static () => new global::RedBolt.Sample.HelloWorld.HelloWorld()),
         new("network:http-request", "HTTP Request", static () => new global::RedBolt.Sample.HttpRequestDemo.HttpRequestDemo()),
         new("redbolt:huge-object-count", "Huge Object Count", static () => new global::RedBolt.Sample.HugeObjectCount.HugeObjectCountApplication()),

@@ -358,7 +358,7 @@ static class MonorepoApp
         try
         {
             var available = LoadSampleModules(root);
-            var selected = SelectSampleModules(available, options.Modules);
+            var selected = SelectSampleModules(available, options.Modules, options.Output is not null);
             var templates = LoadSampleTemplates(root);
             VerifyGeneratedRegionReplacement();
             VerifySampleOrdering();
@@ -377,6 +377,10 @@ static class MonorepoApp
             {
                 var output = Path.GetFullPath(options.Output, root);
                 EnsureOutputIsInWorkspace(root, output);
+                // A module's own host directory may hold hand-written files, such as its Android manifest.
+                var owner = available.FirstOrDefault(module => PathsEqual(Path.Combine(module.Root, "src", "RedBolt", "Sample"), output));
+                if (owner is not null)
+                    throw new InvalidDataException($"Sample output is the own host directory of '{owner.Definition.Name}'; omit '--output' to regenerate it.");
                 var name = options.Name ?? Path.GetFileName(output.TrimEnd(Path.DirectorySeparatorChar));
                 GenerateSampleHost(root, output, name, selected, available, aggregate: true,
                     options.Check, templates, ref stale);
@@ -490,20 +494,34 @@ static class MonorepoApp
 
     private static IReadOnlyList<SampleModule> SelectSampleModules(
         IReadOnlyList<SampleModule> available,
-        IReadOnlyList<string> requested)
+        IReadOnlyList<string> requested,
+        bool aggregate)
     {
-        if (requested.Count == 0 || requested.Any(name => name.Equals("all", StringComparison.OrdinalIgnoreCase)))
-            return available;
-
+        var all = requested.Count == 0;
         var selected = new List<SampleModule>();
         foreach (var name in requested)
         {
+            if (name.Equals("all", StringComparison.OrdinalIgnoreCase))
+            {
+                all = true;
+                continue;
+            }
             var module = available.FirstOrDefault(candidate => candidate.Definition.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
                 ?? throw new InvalidDataException($"Unknown sample module '{name}'.");
+            if (aggregate && module.Definition.Standalone)
+                throw new InvalidDataException($"Sample module '{module.Definition.Name}' is standalone and cannot be part of an aggregate host.");
             if (!selected.Contains(module))
                 selected.Add(module);
         }
+        if (all)
+            return aggregate ? available.Where(module => !module.Definition.Standalone).ToArray() : available;
         return selected;
+    }
+
+    private static bool PathsEqual(string left, string right)
+    {
+        return string.Equals(Path.TrimEndingDirectorySeparator(Path.GetFullPath(left)),
+            Path.TrimEndingDirectorySeparator(Path.GetFullPath(right)), StringComparison.Ordinal);
     }
 
     private static void EnsureOutputIsInWorkspace(string root, string output)
@@ -768,6 +786,9 @@ static class MonorepoApp
         WriteGeneratedFile(Path.Combine(directory, "Program.cs"), program, check, ref stale);
         if (manifests.Length == 1)
             WriteGeneratedFile(Path.Combine(directory, "AndroidManifest.xml"), File.ReadAllText(manifests[0]), check, ref stale);
+        else if (aggregate)
+            // A module's own host directory may hold a hand-written manifest; only an aggregate host's is always generated.
+            RemoveStaleGeneratedFile(Path.Combine(directory, "AndroidManifest.xml"), check, ref stale);
     }
 
     private static string GenerateAndroidProject(
@@ -1091,6 +1112,20 @@ static class MonorepoApp
 
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         File.WriteAllText(path, content);
+    }
+
+    private static void RemoveStaleGeneratedFile(string path, bool check, ref bool stale)
+    {
+        if (!File.Exists(path))
+            return;
+        if (check)
+        {
+            Console.Error.WriteLine($"Stale generated file: {path}");
+            stale = true;
+            return;
+        }
+
+        File.Delete(path);
     }
 
     private static async Task<int> InitializeAsync(IReadOnlyList<Repository> repositories)
@@ -1920,6 +1955,8 @@ static class MonorepoApp
         Console.WriteLine("Without '--output', regenerates each selected module's local web and Android hosts.");
         Console.WriteLine("With '--output', aggregates the selected modules into one host directory.");
         Console.WriteLine("Module names can be repeated or comma-separated; the default is all catalog modules.");
+        Console.WriteLine("Catalog modules marked \"standalone\" keep their own host: the default aggregate leaves them out,");
+        Console.WriteLine("and naming one together with '--output' is an error.");
         Console.WriteLine("Use '--check' to report stale generated files without changing them.");
     }
 
@@ -1956,6 +1993,7 @@ static class MonorepoApp
         public bool Web { get; set; }
         public bool Android { get; set; }
         public bool Native { get; set; }
+        public bool Standalone { get; set; }
         public bool WebNative { get; set; }
         public bool AndroidNative { get; set; } = true;
         public List<string> NativeDependencies { get; set; } = [];
