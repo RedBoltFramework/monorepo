@@ -88,8 +88,13 @@ dotnet build RedBolt.slnx --configuration Debug -maxcpucount \
 
 The expected result is `DUPLICATES` followed by `none`. The logger does not
 compare instances that differ in configuration, platform, target framework, or
-runtime identifier. For a project with one output for all platforms (a host
-tool, the tasks project), examine its lines below `INSTANCES`.
+runtime identifier. It marks an instance with `skipped` below `INSTANCES` and
+does not compare it. A skipped instance runs the target
+`RedBoltReportSkippedProject` and never runs `CoreCompile`: its project is not
+selected for the platform, so it writes no files. For a project with one output
+for all platforms (a host tool, the tasks project), examine its lines below
+`INSTANCES`. Do the same for the native hub `RedBolt.Native`: the expected
+result is one line for each platform.
 
 ## Test harnesses
 
