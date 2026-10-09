@@ -62,8 +62,9 @@
   `win-x64`, `android-x64`, `android-arm64`, or `browser-wasm`.
 - The build root is selected statically, not recorded by builds. Inside the
   monorepo every entry point (root solution, module solution, direct `.csproj`)
-  uses the root `build/`; a standalone checkout uses its own `build/`.
-  `-p:RedBoltBuildRoot=<dir>` overrides both.
+  uses the `build/` directory beside the engine directory (the root `build/` in
+  the monorepo). No repository uses its own `build/`.
+  `-p:RedBoltBuildRoot=<dir>` overrides it.
 - Do not run root and module solutions concurrently; they can share generated
   dependencies.
 - Follow [verification guidance](doc/VERIFICATION.md). Expand checks for shared
@@ -84,7 +85,8 @@
 
   ```sh
   dotnet build RedBolt.slnx --configuration Debug -maxcpucount
-  dotnet test RedBolt.slnx --configuration Debug --no-build --no-restore
+  dotnet build RedBolt.Tests/RedBolt.Tests.csproj --configuration Debug
+  dotnet test RedBolt.Tests/RedBolt.Tests.csproj --configuration Debug --no-build --no-restore
   ```
 
 - Keep standalone module `.slnx` files usable for independent builds.

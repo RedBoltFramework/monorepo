@@ -75,6 +75,22 @@ The preset's binary tree may differ from MSBuild's selected build root. Normal
 engine verification stays with `dotnet`; configuring another tree is not a
 required preliminary step.
 
+After a change to `.props`, `.targets`, or project references, check that no
+project builds as two instances. Two instances of one project write the same
+files and cause random `MSB4018` errors. The instance logger prints each pair
+below `DUPLICATES`, with the global properties that differ:
+
+```sh
+dotnet build RedBolt/eng/RedBolt.ModuleBuild/InstanceLogger/RedBolt.ModuleBuild.InstanceLogger.csproj
+dotnet build RedBolt.slnx --configuration Debug -maxcpucount \
+  "-logger:build/bin/tools/instance-logger/Debug/net10.0/RedBolt.ModuleBuild.InstanceLogger.dll;build/instances.txt"
+```
+
+The expected result is `DUPLICATES` followed by `none`. The logger does not
+compare instances that differ in configuration, platform, target framework, or
+runtime identifier. For a project with one output for all platforms (a host
+tool, the tasks project), examine its lines below `INSTANCES`.
+
 ## Test harnesses
 
 From `RedBolt.Tests/`, set `XDG_DATA_HOME=/home/rk/.local/share` and use:
