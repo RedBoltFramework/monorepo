@@ -1,12 +1,9 @@
 <Project>
   <!--
-    Monorepo build root. Imported (guarded by RedBoltMonorepoRoot) by the core and module
-    Directory.Build.props and Directory.Solution.props when they are checked out beside this file.
-    Overrides the per-repository default so every entry point (root solution, module solution,
-    direct project) builds into this repository's build/. An explicit RedBoltBuildRoot still wins.
+    Marks the monorepo root. RedBolt/eng/RedBolt.Layout.props imports this file.
+    The build root is build/ beside the engine.
   -->
   <PropertyGroup>
     <RedBoltMonorepoRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))</RedBoltMonorepoRoot>
-    <RedBoltExpectedBuildRoot Condition="'$(RedBoltBuildRoot)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)build'))</RedBoltExpectedBuildRoot>
   </PropertyGroup>
 </Project>
