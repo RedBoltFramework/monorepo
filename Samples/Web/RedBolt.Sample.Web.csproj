@@ -9,7 +9,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
     <!-- <redbolt-generated name="web-project-properties"> -->
     <AssemblyName>RedBolt.Samples.All.Web</AssemblyName>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <RedBoltWebOutputDir>$(RedBoltExpectedBuildRoot)/bin/$(Configuration)/browser-wasm/web/all</RedBoltWebOutputDir>
+    <RedBoltWebOutputDir>$(RedBoltBuildRoot)/bin/$(Configuration)/browser-wasm/web/all</RedBoltWebOutputDir>
     <RedBoltExternalWebPInvokeModules>RedBolt.Native.DearImGui;RedBolt.Native.TinyGltf;RedBolt.Native.Box2D;RedBolt.Native.Jolt;RedBolt.Native.RmlUi</RedBoltExternalWebPInvokeModules>
     <RedBoltWebExtensionScript>../../RedBolt.Network/src/RedBolt/Sample/Web/wwwroot/extension.js</RedBoltWebExtensionScript>
     <!-- </redbolt-generated name="web-project-properties"> -->
@@ -117,7 +117,7 @@ For a copy, see <https://opensource.org/licenses/MIT> or the accompanying LICENS
   <!-- <redbolt-generated name="web-project-targets"> -->
   <Target Name="RedBoltBuildAggregateWebNativeArchives" BeforeTargets="ResolveReferences" Condition="'@(RedBoltAggregateWebNativeProject)' != ''">
     <MSBuild Projects="@(RedBoltAggregateWebNativeProject)" Targets="Restore;RedBoltBuildWebNativeArchive" BuildInParallel="false"
-             Properties="Configuration=$(Configuration);RedBoltBuildRoot=$(RedBoltBuildRoot);RedBoltExpectedBuildRoot=$(RedBoltExpectedBuildRoot);RedBoltPlatform=browser-wasm;RuntimeIdentifier=browser-wasm;MSBuildEnableWorkloadResolver=false" />
+             Properties="Configuration=$(Configuration);RedBoltPlatform=browser-wasm;RuntimeIdentifier=browser-wasm;MSBuildEnableWorkloadResolver=false" />
   </Target>
   <!-- </redbolt-generated name="web-project-targets"> -->
 </Project>
