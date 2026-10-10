@@ -38,9 +38,9 @@ for the current build selection and platform setup.
   Do not reconstruct output trees or copy guessed resource directories.
 - Build prerequisites before using `BuildProjectReferences=false`; existing
   assemblies must contain the change.
-- Preserve build-root resource staging and shared assembly probing. Samples use
-  `CoreData;SampleData` and resource prefixes `.;..` when their project requires
-  staged resources.
+- Preserve `ResourceRoot.ini` in the monorepo root and shared assembly probing.
+  Desktop executables find the resource directories through that file; the build
+  makes no link or copy for them.
 - Use the software-rendering harness for native, graphics, and visual tests:
 
   ```sh

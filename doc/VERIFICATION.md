@@ -57,11 +57,11 @@ dotnet build RedBolt.Tests.csproj --configuration Debug --no-restore -maxcpucoun
 Use `dotnet run --project <sample-project> --configuration Debug --no-build -- <sample-arguments>` when the project supports running. If a tool needs an output
 path, query MSBuild (`dotnet msbuild <project> -getProperty:TargetPath` with the
 same configuration/platform properties) or use build-reported output. Do not
-reconstruct binary directories. Runtime resources are staged by build targets;
-tests use the parent output resources. The engine changes its working directory
-to the executable directory. Samples using staged resources use
-`CoreData;SampleData` and resource prefixes `.;..`. Preserve that staging and
-shared assembly probing instead of copying guessed output trees. For native-only diagnostics, use the owning
+reconstruct binary directories. Desktop executables find the resource directories
+through `ResourceRoot.ini` in the monorepo root, and the build makes no link or copy for them.
+The engine searches the executable directory and its parents for this file and mounts the listed
+directories, so it ignores the resource prefixes and paths. The editor does not mount this file;
+it takes its resource prefix from the `CoreData` line. Preserve that file and shared assembly probing instead of copying guessed output trees. For native-only diagnostics, use the owning
 repository's existing configure and build presets, for example:
 
 ```sh
